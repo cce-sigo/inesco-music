@@ -9,6 +9,7 @@ composer.phar
 # Keep includes/config.php local; commit config.example.php instead
 # ============================================================
 includes/config.php
+.env
 
 # ============================================================
 # Data files — contain user-generated or sensitive content
