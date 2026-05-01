@@ -201,13 +201,16 @@ include __DIR__ . '/header.php';
         display:block; width:20mm !important; height:20mm !important;
     }
 
-    .vk-card.back { display:flex; align-items:center; justify-content:center;
+    .vk-card.back { display:flex; flex-direction:column; align-items:center; justify-content:center;
+        padding: 3mm; /* override base padding so wide letter-spaced text has room */
+        text-align:center;
         background: radial-gradient(circle at center, rgba(212,168,90,.18) 0%, transparent 60%),
                     radial-gradient(ellipse at top left, var(--bg2) 0%, var(--bg) 75%); }
     .vk-card.back .word { font-family:"Georgia",serif; font-size:14mm; letter-spacing:.35em;
+        padding-left:.35em; /* compensate for trailing letter-spacing so text is visually centred */
         color:var(--gold-2); text-shadow:0 0 3mm rgba(212,168,90,.35); }
-    .vk-card.back .tag  { position:absolute; bottom:5mm; font-size:2.2mm; letter-spacing:.4em;
-        color:var(--muted); text-transform:uppercase; }
+    .vk-card.back .tag  { position:absolute; bottom:4mm; left:0; right:0; text-align:center;
+        font-size:2.2mm; letter-spacing:.4em; color:var(--muted); text-transform:uppercase; }
 
     @page { size: A4; margin: 15mm; }
     @media print {
