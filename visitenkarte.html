@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<title>INESCO – Visitenkarte</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- QR-Code-Generator (lokal, kein Internet nötig) -->
+<script src="assets/js/vendor/qrcode.min.js"></script>
+<style>
+    :root {
+        --bg:        #1a0a0f;
+        --bg2:       #2a0d14;
+        --gold:      #d4a85a;
+        --gold-2:    #f0c878;
+        --wine:      #8b1a2b;
+        --text:      #f4ead8;
+        --muted:     #c8b893;
+        --card-w:    85mm;
+        --card-h:    55mm;
+    }
+    * { box-sizing: border-box; }
+    html, body {
+        margin: 0; padding: 0;
+        background: #2b2b2b;
+        font-family: "Trebuchet MS", "Segoe UI", system-ui, sans-serif;
+        color: var(--text);
+    }
+    .page {
+        padding: 24px;
+        display: flex; flex-direction: column; align-items: center; gap: 24px;
+    }
+    .toolbar {
+        display: flex; gap: 12px;
+    }
+    .toolbar button {
+        background: var(--wine); color: var(--gold-2);
+        border: 1px solid var(--gold);
+        padding: 8px 16px; border-radius: 999px;
+        font-weight: 700; letter-spacing: .08em;
+        cursor: pointer;
+    }
+    .toolbar button:hover { background: #a32135; }
+
+    /* ---------- Visitenkarte ---------- */
+    .card {
+        width: var(--card-w);
+        height: var(--card-h);
+        background: radial-gradient(ellipse at top left, var(--bg2) 0%, var(--bg) 75%);
+        border: 1px solid rgba(212,168,90,.35);
+        border-radius: 4mm;
+        box-shadow: 0 6px 24px rgba(0,0,0,.45);
+        color: var(--text);
+        position: relative;
+        overflow: hidden;
+        padding: 4mm 5mm;
+        display: grid;
+        grid-template-columns: 1fr 22mm;
+        grid-template-rows: auto 1fr auto;
+        gap: 2mm 4mm;
+    }
+    .card::before { /* dezenter Goldrand innen */
+        content: "";
+        position: absolute; inset: 1.2mm;
+        border: .3mm solid rgba(212,168,90,.45);
+        border-radius: 3mm;
+        pointer-events: none;
+    }
+
+    .card .brand {
+        grid-column: 1 / 3;       /* über die volle Breite, oberhalb des QR */
+        grid-row: 1 / 2;
+        display: flex; align-items: center; gap: 3mm;
+    }
+    .card .brand img {
+        height: 22mm; width: 22mm; object-fit: contain;
+        filter: drop-shadow(0 0 1mm rgba(0,0,0,.5));
+    }
+    .card .brand .word {
+        font-family: "Georgia", "Trajan Pro", serif;
+        font-size: 9mm;
+        letter-spacing: .25em;
+        color: var(--gold-2);
+        line-height: 1;
+    }
+    .card .brand .tag {
+        font-size: 2.2mm;
+        letter-spacing: .35em;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-top: 1mm;
+    }
+
+    .card .info {
+        grid-column: 1 / 2;
+        grid-row: 2 / 4;
+        align-self: end;
+        font-size: 2.7mm;
+        line-height: 1.45;
+    }
+    .card .info .row { display: flex; gap: 1.5mm; align-items: baseline; }
+    .card .info .lbl {
+        color: var(--gold);
+        min-width: 10mm;
+        font-weight: 700;
+        letter-spacing: .05em;
+        text-transform: uppercase;
+        font-size: 2.2mm;
+    }
+    .card .info .val { color: var(--text); }
+    .card .info a { color: inherit; text-decoration: none; }
+
+    .card .qrwrap {
+        grid-column: 2 / 3;
+        grid-row: 2 / 4;
+        align-self: end;
+        justify-self: end;
+        background: #fff;
+        padding: 1.2mm;
+        border-radius: 1.5mm;
+        box-shadow: 0 0 0 .3mm rgba(212,168,90,.6);
+    }
+    .card .qrwrap canvas,
+    .card .qrwrap img,
+    .card .qrwrap > div {
+        display: block;
+        width: 20mm; height: 20mm;
+    }
+    .card .qrwrap img { width: 20mm !important; height: 20mm !important; }
+    .card .qrcaption {
+        grid-column: 2 / 3;
+        grid-row: 3 / 4;
+        align-self: end;
+        text-align: center;
+        font-size: 1.8mm;
+        letter-spacing: .15em;
+        color: var(--muted);
+        text-transform: uppercase;
+        margin-top: 1mm;
+    }
+
+    /* ---------- Rückseite ---------- */
+    .card.back {
+        display: flex; align-items: center; justify-content: center;
+        background:
+            radial-gradient(circle at center, rgba(212,168,90,.18) 0%, transparent 60%),
+            radial-gradient(ellipse at top left, var(--bg2) 0%, var(--bg) 75%);
+    }
+    .card.back .word {
+        font-family: "Georgia", serif;
+        font-size: 14mm;
+        letter-spacing: .35em;
+        color: var(--gold-2);
+        text-shadow: 0 0 3mm rgba(212,168,90,.35);
+    }
+    .card.back .tag {
+        position: absolute;
+        bottom: 5mm;
+        font-size: 2.2mm;
+        letter-spacing: .4em;
+        color: var(--muted);
+        text-transform: uppercase;
+    }
+
+    /* ---------- Druck ---------- */
+    @page { size: A4; margin: 15mm; }
+    @media print {
+        html, body { background: #fff; }
+        .page { padding: 0; gap: 8mm; }
+        .toolbar { display: none; }
+        .card { box-shadow: none; }
+    }
+</style>
+</head>
+<body>
+<div class="page">
+    <div class="toolbar">
+        <button onclick="window.print()">Drucken / PDF speichern</button>
+    </div>
+
+    <!-- Vorderseite -->
+    <div class="card" id="cardFront">
+        <div class="brand">
+            <img src="assets/img/logo.png" alt="INESCO Logo">
+            <div>
+                <div class="word">INESCO</div>
+                <div class="tag">Live · Music · Booking</div>
+            </div>
+        </div>
+
+        <div class="info">
+            <div class="row"><span class="lbl">Tel</span><span class="val"><a href="tel:+4366488548333">+43 664 88 54 83 33</a></span></div>
+            <div class="row"><span class="lbl">Mail</span><span class="val"><a href="mailto:booking@inesco-music.at">booking@inesco-music.at</a></span></div>
+            <div class="row"><span class="lbl">Web</span><span class="val"><a href="https://inesco-music.at">inesco-music.at</a></span></div>
+        </div>
+
+        <div class="qrwrap">
+            <div id="qr"></div>
+        </div>
+        <div class="qrcaption">Kontakt · Scan</div>
+    </div>
+
+    <!-- Rückseite -->
+    <div class="card back">
+        <div class="word">INESCO</div>
+        <div class="tag">inesco-music.at</div>
+    </div>
+</div>
+
+<script>
+    // vCard für QR-Code – beim Scannen wird der Kontakt direkt vorgeschlagen
+    const vcard = [
+        'BEGIN:VCARD',
+        'VERSION:3.0',
+        'FN:INESCO',
+        'ORG:INESCO',
+        'TEL;TYPE=CELL,VOICE:+4366488548333',
+        'EMAIL;TYPE=INTERNET:booking@inesco-music.at',
+        'URL:https://inesco-music.at',
+        'END:VCARD'
+    ].join('\r\n');
+
+    new QRCode(document.getElementById('qr'), {
+        text: vcard,
+        width: 240,
+        height: 240,
+        colorDark:  '#1a0a0f',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+    });
+</script>
+</body>
+</html>

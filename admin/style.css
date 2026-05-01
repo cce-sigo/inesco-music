@@ -1,0 +1,119 @@
+/* INESCO Admin – schlichtes, sauberes Backend-UI */
+:root {
+    --bg: #1c1416;
+    --panel: #261a1d;
+    --line: #3a2a2e;
+    --text: #f1ead8;
+    --muted: #a89280;
+    --gold: #d4a544;
+    --bordeaux: #8a2230;
+    --danger: #c0392b;
+}
+* { box-sizing: border-box; }
+body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Inter", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
+    line-height: 1.5;
+}
+a { color: var(--gold); text-decoration: none; }
+a:hover { text-decoration: underline; }
+.container { width: min(1200px, 95%); margin: 0 auto; }
+
+.admin-header {
+    background: #120a0c; border-bottom: 1px solid var(--line); padding: 1rem 0;
+}
+.admin-header .container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+.admin-header .brand { font-weight: 700; letter-spacing: .15em; color: var(--gold); }
+.admin-header nav { display: flex; gap: 1rem; flex-wrap: wrap; }
+.admin-header nav a { color: var(--text); padding: .35rem .6rem; border-radius: 6px; }
+.admin-header nav a:hover { background: rgba(255,255,255,.06); text-decoration: none; }
+.admin-header nav a.logout { color: var(--muted); margin-left: auto; }
+
+.admin-main { padding: 2rem 0 4rem; }
+.admin-main h1 { font-size: 1.6rem; margin: 0 0 1.2rem; display: flex; align-items: center; gap: 1rem; }
+
+/* Cards (Dashboard) */
+.cards {
+    display: grid; gap: 1rem; margin-top: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+.card {
+    background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+    padding: 1.4rem; color: var(--text); transition: transform .2s, border-color .2s;
+}
+.card:hover { transform: translateY(-3px); border-color: var(--gold); text-decoration: none; }
+.card h3 { margin: 0 0 .3rem; color: var(--gold); }
+.card p  { margin: 0; color: var(--muted); }
+
+/* Tabellen */
+.data { width: 100%; border-collapse: collapse; background: var(--panel); border-radius: 10px; overflow: hidden; }
+.data th, .data td { padding: .8rem 1rem; text-align: left; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.data th { background: #1d1315; color: var(--gold); font-weight: 600; font-size: .85rem; letter-spacing: .05em; text-transform: uppercase; }
+.data tr.past { opacity: .55; }
+.data img { display: block; }
+
+/* Forms */
+.form { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 1.5rem; max-width: 900px; }
+.form fieldset { border: 1px solid var(--line); border-radius: 8px; padding: 1rem 1.2rem; margin-bottom: 1.2rem; }
+.form legend { padding: 0 .5rem; color: var(--gold); font-weight: 600; }
+.form label { display: block; margin-bottom: 1rem; font-size: .85rem; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; }
+.form input[type=text], .form input[type=email], .form input[type=url],
+.form input[type=password], .form input[type=date], .form input[type=time],
+.form select, .form textarea {
+    width: 100%; padding: .65rem .8rem; margin-top: .3rem;
+    background: #16100f; color: var(--text);
+    border: 1px solid var(--line); border-radius: 6px;
+    font: inherit; transition: border-color .2s;
+}
+.form input[type=file] { margin-top: .3rem; color: var(--muted); }
+.form input:focus, .form textarea:focus, .form select:focus { outline: none; border-color: var(--gold); }
+.form textarea { resize: vertical; }
+.form .grid-2 { display: grid; gap: 0 1rem; grid-template-columns: 1fr 1fr; }
+@media (max-width: 700px) { .form .grid-2 { grid-template-columns: 1fr; } }
+
+.btn-primary, button.btn-primary, a.btn-primary {
+    display: inline-block; cursor: pointer;
+    background: var(--bordeaux); color: #fff;
+    padding: .6rem 1.2rem; border: 1px solid var(--gold); border-radius: 6px;
+    font-weight: 600; letter-spacing: .05em; text-transform: uppercase; font-size: .85rem;
+    transition: background .2s;
+}
+.btn-primary:hover { background: #a52a3a; text-decoration: none; }
+.btn-ghost { display: inline-block; padding: .6rem 1.2rem; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); margin-left: .5rem; }
+.btn-ghost:hover { color: var(--text); border-color: var(--gold); text-decoration: none; }
+
+.link-danger {
+    background: none; border: 0; color: var(--danger); cursor: pointer; padding: 0; margin-left: .5rem; font-weight: 600;
+}
+.link-danger:hover { text-decoration: underline; }
+
+.muted { color: var(--muted); font-size: .9rem; }
+
+/* Flash */
+.msg { padding: .8rem 1rem; border-radius: 6px; margin-bottom: 1rem; border: 1px solid var(--line); }
+.msg.ok { background: rgba(40,120,60,.18); border-color: #3c7d4c; color: #c8efc7; }
+.msg.err { background: rgba(192,57,43,.15); border-color: #8e2c20; color: #f6c2bc; }
+
+/* Footer */
+.admin-footer { padding: 2rem 0; text-align: center; color: var(--muted); border-top: 1px solid var(--line); }
+
+/* ---- Login ---- */
+.login-body {
+    min-height: 100vh; display: flex; align-items: center; justify-content: center;
+    background:
+        radial-gradient(ellipse at top, #2a1518, #100a0b 80%);
+    padding: 2rem;
+}
+.login-card {
+    width: min(420px, 100%);
+    background: var(--panel); border: 1px solid var(--line);
+    border-radius: 14px; padding: 2.5rem 2rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,.6);
+}
+.login-card h1 { margin: 0 0 1.5rem; text-align: center; color: var(--gold); letter-spacing: .15em; }
+.login-card form label { display: block; margin-bottom: 1rem; font-size: .8rem; text-transform: uppercase; letter-spacing: .1em; color: var(--muted); }
+.login-card input { width: 100%; padding: .7rem .9rem; margin-top: .3rem; background: #16100f; border: 1px solid var(--line); border-radius: 6px; color: var(--text); font: inherit; }
+.login-card input:focus { outline: none; border-color: var(--gold); }
+.login-card .btn-primary { width: 100%; margin-top: .5rem; padding: .8rem; border: 0; }
+.login-card .hint { color: var(--muted); text-align: center; margin: 0 0 1rem; font-size: .9rem; }
+.login-card .back { text-align: center; margin-top: 1.5rem; font-size: .85rem; }
