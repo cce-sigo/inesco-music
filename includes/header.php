@@ -52,9 +52,8 @@ $navBase    = $isHome ? '' : url('');
             <link rel="prefetch" as="<?= e($mp['as']) ?>" href="<?= e($mp['href']) ?>">
         <?php endforeach; ?>
     <?php endif; ?>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <?php $fontsCssPath = BASE_PATH . '/assets/css/fonts.css'; $fontsVer = is_file($fontsCssPath) ? filemtime($fontsCssPath) : time(); ?>
+    <link rel="stylesheet" href="<?= e(url('assets/css/fonts.css')) ?>?v=<?= $fontsVer ?>">
     <?php $cssPath = BASE_PATH . '/assets/css/style.css'; $cssVer = is_file($cssPath) ? filemtime($cssPath) : time(); ?>
     <link rel="stylesheet" href="<?= e(url('assets/css/style.css')) ?>?v=<?= $cssVer ?>">
 
