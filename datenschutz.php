@@ -94,18 +94,12 @@ include __DIR__ . '/includes/header.php';
             Eine Einwilligung ist für rein technisch notwendige Cookies nicht erforderlich.
         </p>
 
-        <h2>6. Schriftarten von Google Fonts</h2>
+        <h2>6. Schriftarten (lokal eingebunden)</h2>
         <p>
-            Diese Website lädt Schriftarten von Google Fonts (Anbieter: Google Ireland Limited,
-            Gordon House, Barrow Street, Dublin 4, Irland). Beim Aufruf der Seite stellt Ihr
-            Browser eine Verbindung zu Servern von Google her, wodurch Ihre IP-Adresse an Google
-            übermittelt werden kann.
-        </p>
-        <p>
-            <strong>Rechtsgrundlage:</strong> Art. 6 Abs. 1 lit. f DSGVO (berechtigtes Interesse an
-            einer einheitlichen, ansprechenden Darstellung der Inhalte).<br>
-            Weitere Informationen:
-            <a href="https://policies.google.com/privacy" target="_blank" rel="noopener">policies.google.com/privacy</a>.
+            Diese Website verwendet Schriftarten (Cormorant Garamond, Inter), die <strong>lokal auf
+            unserem Server</strong> gespeichert und ausgeliefert werden. Es findet keine Verbindung
+            zu externen Servern statt; insbesondere werden keine Daten an Google oder andere
+            Drittanbieter übermittelt.
         </p>
 
         <h2>7. Eingebettete Inhalte (YouTube/Vimeo)</h2>

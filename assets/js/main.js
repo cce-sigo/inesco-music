@@ -2,6 +2,23 @@
 (function () {
     'use strict';
 
+    // ---- DSGVO-Fassade: YouTube/Vimeo erst auf Klick laden ----
+    document.querySelectorAll('.video-facade').forEach(function (facade) {
+        facade.addEventListener('click', function () {
+            const src   = facade.dataset.src;
+            const title = facade.dataset.title || '';
+            if (!src) return;
+            const iframe = document.createElement('iframe');
+            iframe.src         = src;
+            iframe.title       = title;
+            iframe.frameBorder = '0';
+            iframe.allow       = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';
+            iframe.allowFullscreen = true;
+            iframe.style.cssText   = 'position:absolute;inset:0;width:100%;height:100%;border:0;';
+            facade.parentNode.replaceChild(iframe, facade);
+        });
+    });
+
     // Mobile Nav Toggle
     const toggle = document.querySelector('.nav-toggle');
     const nav = document.querySelector('.main-nav');

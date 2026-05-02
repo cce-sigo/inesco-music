@@ -126,7 +126,6 @@ include __DIR__ . '/includes/header.php';
                         <div class="video-frame">
                             <?php if (($v['type'] ?? '') === 'youtube' || ($v['type'] ?? '') === 'vimeo'):
                                 $vsrc = $v['src'];
-                                // Für stabile postMessage-Steuerung erforderliche Parameter ergänzen
                                 if ($v['type'] === 'youtube' && strpos($vsrc, 'enablejsapi=') === false) {
                                     $vsrc .= (strpos($vsrc, '?') === false ? '?' : '&') . 'enablejsapi=1';
                                 }
@@ -176,8 +175,16 @@ include __DIR__ . '/includes/header.php';
                         <?php elseif ($type === 'video' && !empty($im['src'])): ?>
                             <div class="impression-media video-frame">
                                 <?php $kind = $im['video_kind'] ?? 'upload'; ?>
-                                <?php if ($kind === 'youtube' || $kind === 'vimeo'): ?>
-                                    <iframe src="<?= e($im['src']) ?>" title="<?= e($cap) ?>"
+                                <?php if ($kind === 'youtube' || $kind === 'vimeo'):
+                                    $imSrc = $im['src'];
+                                    if ($kind === 'youtube' && strpos($imSrc, 'enablejsapi=') === false) {
+                                        $imSrc .= (strpos($imSrc, '?') === false ? '?' : '&') . 'enablejsapi=1';
+                                    }
+                                    if ($kind === 'vimeo' && strpos($imSrc, 'api=') === false) {
+                                        $imSrc .= (strpos($imSrc, '?') === false ? '?' : '&') . 'api=1';
+                                    }
+                                ?>
+                                    <iframe src="<?= e($imSrc) ?>" title="<?= e($cap) ?>"
                                             frameborder="0" loading="lazy"
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                             allowfullscreen></iframe>
