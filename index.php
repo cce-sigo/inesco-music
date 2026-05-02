@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 require_once __DIR__ . '/includes/config.php';
 
 $content  = read_json('content');
@@ -189,6 +189,7 @@ include __DIR__ . '/includes/header.php';
                                             frameborder="0" loading="lazy"
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                             allowfullscreen></iframe>
+                                <?php else: ?>
                                     <video controls preload="metadata" playsinline
                                            src="<?= e(url($im['src'])) ?>#t=0.1"></video>
                                 <?php endif; ?>
