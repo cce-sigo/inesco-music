@@ -50,8 +50,7 @@ include __DIR__ . '/includes/header.php';
         <span class="hero-logo">
             <img src="<?= e(main_logo_url()) ?>" alt="INESCO">
         </span>
-        <h1><?= e($content['hero']['headline'] ?? 'INESCO') ?></h1>
-        <p class="subline"><?= e($content['hero']['subline'] ?? '') ?></p>
+        <h1><?= e($content['hero']['headline'] ?? 'INESCO') ?> <span class="subline"><?= e($content['hero']['subline'] ?? '') ?></span></h1>
         <p class="slogan"><?= e($content['hero']['slogan'] ?? '') ?></p>
         <div class="cta-row">
             <a class="btn btn-primary" href="<?= e($content['hero']['ctaPrimary']['href'] ?? '#kontakt') ?>">
@@ -75,7 +74,7 @@ include __DIR__ . '/includes/header.php';
             <?php foreach ($members as $m): ?>
                 <article class="member reveal">
                     <div class="member-photo">
-                        <img src="<?= e(url($m['image'] ?? 'assets/img/placeholder.jpg')) ?>" alt="<?= e($m['name']) ?>" loading="lazy">
+                        <img src="<?= e(url($m['image'] ?? 'assets/img/placeholder.jpg')) ?>" alt="<?= e($m['name'] . ' – ' . $m['role'] . ', INESCO') ?>" loading="lazy">
                     </div>
                     <div class="member-text">
                         <h3><?= e($m['name']) ?></h3>

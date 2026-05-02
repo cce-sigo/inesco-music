@@ -151,6 +151,7 @@ h4 { font-size: 1.2rem; font-family: var(--sans); font-weight: 600; }
 }
 .hero h1 { color: var(--gold-soft); margin-bottom: .2em; animation: fadeInUp 1s .2s ease both; }
 .subline {
+    display: block;
     font-family: var(--serif); font-size: 1.4rem; letter-spacing: .25em;
     text-transform: uppercase; color: var(--text-soft);
     animation: fadeInUp 1s .4s ease both;

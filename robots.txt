@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin/
+Disallow: /api/
+Disallow: /data/
+Disallow: /vendor/
+Allow: /
+
+Sitemap: https://inesco-music.at/sitemap.php
