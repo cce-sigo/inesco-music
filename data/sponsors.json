@@ -6,5 +6,13 @@
         "url": "https://carusoguitars.at",
         "logo": "assets/img/sponsors/caruso-logo-25c5fc.png",
         "text": "Mit Caruso Guitars verbindet uns mehr als nur die Liebe zur Musik – es ist eine gemeinsame Leidenschaft für Klang, Handwerk und Ausdruck. Als Freund und Wegbegleiter steht Caruso Guitars für Qualität, Individualität und echte Hingabe zur Musik."
+    },
+    {
+        "id": "2",
+        "group": "sponsoren",
+        "name": "CCE - Ziviltechniker",
+        "url": "https://cce.co.at",
+        "logo": "assets/img/sponsors/cce-logo-7f6a16.jpg",
+        "text": "CCE ist ein verlässlicher Sponsor und Partner, der uns mit großem Engagement unterstützt. Durch diese Zusammenarbeit wird es möglich, musikalische Projekte umzusetzen und kreative Ideen weiterzutragen. Wir schätzen das Vertrauen und die kontinuierliche Unterstützung sehr."
     }
 ]
