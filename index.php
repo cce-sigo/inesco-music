@@ -299,7 +299,7 @@ include __DIR__ . '/includes/header.php';
                 <article class="partner-card partner-card--friend reveal">
                     <?php if (!empty($sp['logo'])): ?>
                         <div class="partner-logo">
-                            <img src="<?= e(url($sp['logo'])) ?>" alt="<?= e($sp['name']) ?>" loading="lazy">
+                            <img src="<?= e(url($sp['logo'])) ?>" alt="<?= e($sp['name']) ?>" loading="eager">
                         </div>
                     <?php endif; ?>
                     <div class="partner-info">
@@ -328,10 +328,10 @@ include __DIR__ . '/includes/header.php';
                         <div class="partner-logo">
                             <?php if (!empty($sp['url'])): ?>
                                 <a href="<?= e($sp['url']) ?>" target="_blank" rel="noopener noreferrer">
-                                    <img src="<?= e(url($sp['logo'])) ?>" alt="<?= e($sp['name']) ?>" loading="lazy">
+                                    <img src="<?= e(url($sp['logo'])) ?>" alt="<?= e($sp['name']) ?>" loading="eager">
                                 </a>
                             <?php else: ?>
-                                <img src="<?= e(url($sp['logo'])) ?>" alt="<?= e($sp['name']) ?>" loading="lazy">
+                                <img src="<?= e(url($sp['logo'])) ?>" alt="<?= e($sp['name']) ?>" loading="eager">
                             <?php endif; ?>
                         </div>
                     <?php endif; ?>
