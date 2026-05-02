@@ -288,8 +288,8 @@ include __DIR__ . '/includes/header.php';
         <h2 class="section-title">Freunde &amp; Sponsoren</h2>
 
         <?php
-        $partner_freunde   = array_values(array_filter($sponsors, fn($s) => ($s['group'] ?? '') === 'freunde'));
-        $partner_sponsoren = array_values(array_filter($sponsors, fn($s) => ($s['group'] ?? '') === 'sponsoren'));
+        $partner_freunde   = array_values(array_filter($sponsors, fn($s) => ($s['group'] ?? '') === 'freunde'   && ($s['visible'] ?? true)));
+        $partner_sponsoren = array_values(array_filter($sponsors, fn($s) => ($s['group'] ?? '') === 'sponsoren' && ($s['visible'] ?? true)));
         ?>
 
         <?php if (!empty($partner_freunde)): ?>

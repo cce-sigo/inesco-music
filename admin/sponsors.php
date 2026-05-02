@@ -32,13 +32,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             if ($up) $logoPath = $up;
         }
 
+        $visible = isset($_POST['visible']) ? true : false;
+
         $entry = [
-            'id'    => $sid,
-            'group' => $group,
-            'name'  => $name,
-            'url'   => $urlVal,
-            'logo'  => $logoPath,
-            'text'  => $text,
+            'id'      => $sid,
+            'group'   => $group,
+            'name'    => $name,
+            'url'     => $urlVal,
+            'logo'    => $logoPath,
+            'text'    => $text,
+            'visible' => $visible,
         ];
 
         $found = false;
@@ -64,6 +67,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $sponsors = array_values(array_filter($sponsors, fn($s) => ($s['id'] ?? '') !== $did));
         write_json('sponsors', $sponsors);
         flash_set('ok', 'Gelöscht.');
+        redirect(url('admin/sponsors.php'));
+    }
+
+    if ($op === 'toggle') {
+        $tid = (string)($_POST['id'] ?? '');
+        foreach ($sponsors as &$s) {
+            if (($s['id'] ?? '') === $tid) {
+                $s['visible'] = !(($s['visible'] ?? true));
+                break;
+            }
+        }
+        unset($s);
+        write_json('sponsors', $sponsors);
         redirect(url('admin/sponsors.php'));
     }
 
@@ -100,6 +116,11 @@ if ($action === 'edit' || $action === 'new') {
         <input type="hidden" name="id" value="<?= e($editing['id']) ?>">
         <input type="hidden" name="existing_logo" value="<?= e($editing['logo']) ?>">
 
+        <label style="display:inline-flex;align-items:center;gap:.5rem;cursor:pointer;margin-bottom:1rem;text-transform:none;letter-spacing:0;font-size:.9rem;color:var(--text)">
+            <input type="checkbox" name="visible" value="1" <?= ($editing['visible'] ?? true) ? 'checked' : '' ?> style="width:16px;height:16px;flex-shrink:0;margin:0;cursor:pointer;accent-color:var(--gold)">
+            Auf Website anzeigen
+        </label>
+
         <label>Gruppe
             <select name="group">
                 <option value="freunde"   <?= $editing['group'] === 'freunde'   ? 'selected' : '' ?>>Freunde</option>
@@ -129,7 +150,7 @@ if ($action === 'edit' || $action === 'new') {
         <p class="muted">Noch keine Einträge.</p>
     <?php else: ?>
     <table class="data">
-        <thead><tr><th>Logo</th><th>Name</th><th>URL</th><th>Text</th><th></th></tr></thead>
+        <thead><tr><th>Logo</th><th>Name</th><th>URL</th><th>Text</th><th>Sichtbar</th><th></th></tr></thead>
         <tbody>
         <?php foreach ($group as $sp): ?>
             <tr>
@@ -145,6 +166,14 @@ if ($action === 'edit' || $action === 'new') {
                     <?php endif; ?>
                 </td>
                 <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap"><?= e($sp['text']) ?></td>
+                <td style="text-align:center">
+                    <form method="post" style="display:inline;margin:0">
+                        <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+                        <input type="hidden" name="op" value="toggle">
+                        <input type="hidden" name="id" value="<?= e($sp['id']) ?>">
+                        <button type="submit" title="Sichtbarkeit umschalten" style="background:none;border:none;cursor:pointer;font-size:1.1rem;padding:0 .3rem"><?= ($sp['visible'] ?? true) ? '<span style="color:var(--gold)">✓</span>' : '<span style="color:#555">✗</span>' ?></button>
+                    </form>
+                </td>
                 <td style="white-space:nowrap">
                     <a href="?action=edit&id=<?= e($sp['id']) ?>">Bearbeiten</a>
 
