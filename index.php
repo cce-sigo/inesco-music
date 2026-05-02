@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 require_once __DIR__ . '/includes/config.php';
 
 $content  = read_json('content');
@@ -7,6 +7,7 @@ $tracks   = read_json('tracks');
 $videos   = read_json('videos');
 $concerts = sort_concerts(read_json('concerts'));
 $impressions = read_json('impressions');
+$sponsors = read_json('sponsors');
 $contact  = read_json('contact');
 
 // Hero-Bilder vorbereiten (vor Header, damit Preload möglich ist)
@@ -188,7 +189,6 @@ include __DIR__ . '/includes/header.php';
                                             frameborder="0" loading="lazy"
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                             allowfullscreen></iframe>
-                                <?php else: ?>
                                     <video controls preload="metadata" playsinline
                                            src="<?= e(url($im['src'])) ?>#t=0.1"></video>
                                 <?php endif; ?>
@@ -276,6 +276,84 @@ include __DIR__ . '/includes/header.php';
             <button type="submit" class="btn btn-primary">Nachricht senden</button>
             <p class="form-status" role="status" aria-live="polite"></p>
         </form>
+    </div>
+</section>
+<?php endif; ?>
+
+<?php if (nav_is_visible('partner')): ?>
+<!-- FREUNDE & SPONSOREN -->
+<section class="section section-partner" id="partner">
+    <div class="container">
+        <h2 class="section-title">Freunde &amp; Sponsoren</h2>
+
+        <?php
+        $partner_freunde   = array_values(array_filter($sponsors, fn($s) => ($s['group'] ?? '') === 'freunde'));
+        $partner_sponsoren = array_values(array_filter($sponsors, fn($s) => ($s['group'] ?? '') === 'sponsoren'));
+        ?>
+
+        <?php if (!empty($partner_freunde)): ?>
+        <h3 class="partner-group-title">Freunde</h3>
+        <div class="partner-grid partner-grid--friends">
+            <?php foreach ($partner_freunde as $sp): ?>
+                <article class="partner-card partner-card--friend reveal">
+                    <?php if (!empty($sp['logo'])): ?>
+                        <div class="partner-logo">
+                            <img src="<?= e(url($sp['logo'])) ?>" alt="<?= e($sp['name']) ?>" loading="lazy">
+                        </div>
+                    <?php endif; ?>
+                    <div class="partner-info">
+                        <?php if (!empty($sp['url'])): ?>
+                            <a class="partner-name" href="<?= e($sp['url']) ?>" target="_blank" rel="noopener noreferrer">
+                                <?= e($sp['name']) ?>
+                            </a>
+                        <?php else: ?>
+                            <span class="partner-name"><?= e($sp['name']) ?></span>
+                        <?php endif; ?>
+                        <?php if (!empty($sp['text'])): ?>
+                            <p class="partner-text"><?= nl2br(e($sp['text'])) ?></p>
+                        <?php endif; ?>
+                    </div>
+                </article>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+        <?php if (!empty($partner_sponsoren)): ?>
+        <h3 class="partner-group-title">Sponsoren</h3>
+        <div class="partner-grid partner-grid--sponsors">
+            <?php foreach ($partner_sponsoren as $sp): ?>
+                <article class="partner-card partner-card--sponsor reveal">
+                    <?php if (!empty($sp['logo'])): ?>
+                        <div class="partner-logo">
+                            <?php if (!empty($sp['url'])): ?>
+                                <a href="<?= e($sp['url']) ?>" target="_blank" rel="noopener noreferrer">
+                                    <img src="<?= e(url($sp['logo'])) ?>" alt="<?= e($sp['name']) ?>" loading="lazy">
+                                </a>
+                            <?php else: ?>
+                                <img src="<?= e(url($sp['logo'])) ?>" alt="<?= e($sp['name']) ?>" loading="lazy">
+                            <?php endif; ?>
+                        </div>
+                    <?php endif; ?>
+                    <div class="partner-info">
+                        <?php if (!empty($sp['url'])): ?>
+                            <a class="partner-name" href="<?= e($sp['url']) ?>" target="_blank" rel="noopener noreferrer">
+                                <?= e($sp['name']) ?>
+                            </a>
+                        <?php else: ?>
+                            <span class="partner-name"><?= e($sp['name']) ?></span>
+                        <?php endif; ?>
+                        <?php if (!empty($sp['text'])): ?>
+                            <p class="partner-text"><?= nl2br(e($sp['text'])) ?></p>
+                        <?php endif; ?>
+                    </div>
+                </article>
+            <?php endforeach; ?>
+        </div>
+        <?php endif; ?>
+
+        <?php if (empty($partner_freunde) && empty($partner_sponsoren)): ?>
+            <p class="muted">Bald stellen wir hier unsere Partner vor.</p>
+        <?php endif; ?>
     </div>
 </section>
 <?php endif; ?>

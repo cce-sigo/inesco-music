@@ -21,6 +21,7 @@
             <a href="<?= e(url('admin/videos.php')) ?>">Videos</a>
             <a href="<?= e(url('admin/impressions.php')) ?>">Impressionen</a>
             <a href="<?= e(url('admin/concerts.php')) ?>">Konzerte</a>
+            <a href="<?= e(url('admin/sponsors.php')) ?>">Sponsoren</a>
             <a href="<?= e(url('admin/contact.php')) ?>">Kontakt</a>
             <a href="<?= e(url('admin/visitenkarte.php')) ?>">Visitenkarte</a>
             <a class="logout" href="<?= e(url('admin/logout.php')) ?>">Logout (<?= e($_SESSION['admin_user'] ?? '') ?>)</a>

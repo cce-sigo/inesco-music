@@ -201,6 +201,7 @@ h4 { font-size: 1.2rem; font-family: var(--sans); font-weight: 600; }
 .section-video  { background: var(--bg-soft); }
 .section-impressions { background: var(--bg); }
 .section-concerts { background: var(--bg); }
+.section-partner  { background: var(--bg-soft); }
 .section-contact { background: linear-gradient(180deg, var(--bg-soft), #0c0507); }
 
 .section-title {
@@ -388,6 +389,69 @@ h4 { font-size: 1.2rem; font-family: var(--sans); font-weight: 600; }
 .form-status { margin-top: 1rem; min-height: 1.4em; }
 .form-status.ok  { color: var(--gold-soft); }
 .form-status.err { color: #f0a3a3; }
+
+.contact-form .hp { position: absolute; left: -9999px; }
+.form-status { margin-top: 1rem; min-height: 1.4em; }
+.form-status.ok  { color: var(--gold-soft); }
+.form-status.err { color: #f0a3a3; }
+
+/* ---------- Partner (Freunde & Sponsoren) ---------- */
+.partner-group-title {
+    color: var(--gold); font-family: var(--serif);
+    font-size: 1.4rem; letter-spacing: .1em;
+    margin: 2.5rem 0 1.2rem; text-align: center;
+}
+.partner-group-title:first-of-type { margin-top: 0; }
+
+.partner-grid {
+    display: grid; gap: 1.5rem;
+    grid-template-columns: 1fr;
+    margin-bottom: 1rem;
+}
+
+.partner-card {
+    background: var(--bg-card);
+    border: 1px solid var(--line); border-radius: var(--radius);
+    overflow: hidden; box-shadow: var(--shadow);
+    display: flex; flex-direction: row; align-items: center;
+    gap: 1.8rem;
+    padding: 1.4rem 1.8rem;
+    transition: transform .35s ease, box-shadow .35s ease;
+    text-align: left;
+}
+.partner-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 16px 40px rgba(0,0,0,.6);
+}
+
+.partner-logo {
+    flex: 0 0 auto;
+    width: 120px;
+    display: flex; align-items: center; justify-content: center;
+}
+.partner-card--sponsor .partner-logo { width: 160px; }
+.partner-logo img {
+    max-width: 100%; max-height: 80px;
+    object-fit: contain;
+    filter: brightness(.9) saturate(.8);
+    transition: filter .35s ease;
+}
+.partner-card:hover .partner-logo img {
+    filter: brightness(1) saturate(1);
+}
+.partner-logo a { display: block; }
+
+.partner-info { flex: 1 1 0; min-width: 0; }
+.partner-name {
+    display: block; font-family: var(--serif);
+    font-size: 1.15rem; color: var(--gold-soft);
+    text-decoration: none; letter-spacing: .05em;
+    transition: color .25s ease;
+}
+a.partner-name:hover { color: var(--gold); text-decoration: underline; }
+.partner-text {
+    margin: .5rem 0 0; font-size: .9rem; color: var(--text-soft); line-height: 1.6;
+}
 
 /* ---------- Footer ---------- */
 .site-footer {

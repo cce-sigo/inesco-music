@@ -19,6 +19,7 @@ include __DIR__ . '/header.php';
     <a class="card" href="tracks.php"><h3>Audio</h3><p><?= count($tracks) ?> Tracks</p></a>
     <a class="card" href="videos.php"><h3>Videos</h3><p><?= count($videos) ?> Videos</p></a>
     <a class="card" href="concerts.php"><h3>Konzerte</h3><p><?= count($concerts) ?> Termine</p></a>
+    <a class="card" href="sponsors.php"><h3>Sponsoren</h3><p>Freunde &amp; Partner</p></a>
     <a class="card" href="contact.php"><h3>Kontakt</h3><p>E-Mail, Telefon, Social</p></a>
 </div>
 

@@ -182,12 +182,13 @@ function header_logo_path(): ?string {
  */
 function nav_defaults(): array {
     return [
-        ['id' => 'bio',          'label' => 'Band',         'visible' => true],
-        ['id' => 'musik',        'label' => 'Musik',        'visible' => true],
-        ['id' => 'videos',       'label' => 'Videos',       'visible' => true],
-        ['id' => 'impressionen', 'label' => 'Impressionen', 'visible' => true],
-        ['id' => 'konzerte',     'label' => 'Konzerte',     'visible' => true],
-        ['id' => 'kontakt',      'label' => 'Kontakt',      'visible' => true],
+        ['id' => 'bio',          'label' => 'Band',              'visible' => true],
+        ['id' => 'musik',        'label' => 'Musik',             'visible' => true],
+        ['id' => 'videos',       'label' => 'Videos',            'visible' => true],
+        ['id' => 'impressionen', 'label' => 'Impressionen',      'visible' => true],
+        ['id' => 'konzerte',     'label' => 'Konzerte',          'visible' => true],
+        ['id' => 'kontakt',      'label' => 'Kontakt',           'visible' => true],
+        ['id' => 'partner',      'label' => 'Freunde & Sponsoren', 'visible' => true],
     ];
 }
 
