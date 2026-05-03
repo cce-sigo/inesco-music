@@ -9,7 +9,9 @@
             const title = facade.dataset.title || '';
             if (!src) return;
             const iframe = document.createElement('iframe');
-            iframe.src         = src;
+            // append autoplay so the video starts immediately after facade click
+            const autoSrc = src + (src.indexOf('?') === -1 ? '?' : '&') + 'autoplay=1';
+            iframe.src         = autoSrc;
             iframe.title       = title;
             iframe.frameBorder = '0';
             iframe.allow       = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture';

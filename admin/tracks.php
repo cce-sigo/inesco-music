@@ -40,6 +40,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     if ($op === 'delete') {
         $tid = $_POST['id'] ?? '';
+        foreach ($tracks as $t) {
+            if (($t['id'] ?? '') !== $tid) continue;
+            maybe_unlink_asset($t['file']  ?? '', 'tracks', $tid);
+            maybe_unlink_asset($t['cover'] ?? '', 'tracks', $tid);
+            break;
+        }
         $tracks = array_values(array_filter($tracks, fn($t) => ($t['id'] ?? '') !== $tid));
         write_json('tracks', $tracks);
         flash_set('ok','Gelöscht.');
@@ -52,6 +58,8 @@ include __DIR__ . '/header.php';
 if ($action === 'edit' || $action === 'new') {
     $editing = ['id'=>'','title'=>'','artist'=>'INESCO','file'=>'','cover'=>''];
     if ($action === 'edit') foreach ($tracks as $t) if (($t['id']??'') === $id) { $editing = $t; break; }
+    $serverAudio = scan_asset_files('audio', ['mp3','m4a','ogg','wav']);
+    $serverImages = scan_asset_files('img', ['jpg','jpeg','png','webp','avif','gif']);
     ?>
     <h1><?= $action==='new' ? 'Neuer Track' : 'Track bearbeiten' ?></h1>
     <form method="post" class="form" enctype="multipart/form-data">
@@ -62,10 +70,34 @@ if ($action === 'edit' || $action === 'new') {
         <input type="hidden" name="existing_cover" value="<?= e($editing['cover']) ?>">
         <label>Titel<input type="text" name="title" value="<?= e($editing['title']) ?>" required></label>
         <label>Artist<input type="text" name="artist" value="<?= e($editing['artist']) ?>"></label>
-        <label>Audiodatei (MP3/OGG/M4A/WAV)<input type="file" name="file" accept="audio/*"></label>
+        <label>Neue Audiodatei hochladen (MP3/OGG/M4A/WAV)<input type="file" name="file" accept="audio/*"></label>
         <?php if ($editing['file']): ?><p class="muted">Aktuell: <?= e($editing['file']) ?></p><?php endif; ?>
-        <label>Cover (optional)<input type="file" name="cover" accept="image/*"></label>
+        <?php if (!empty($serverAudio)): ?>
+        <label>— oder vorhandene Server-Datei wählen
+            <select onchange="document.querySelector('[name=existing_file]').value=this.value">
+                <option value="">– Neue Datei hochladen –</option>
+                <?php foreach ($serverAudio as $sf): ?>
+                    <option value="<?= e($sf) ?>" <?= $editing['file']===$sf?'selected':'' ?>>
+                        <?= e(ltrim(str_replace('assets/', '', $sf), '/')) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <?php endif; ?>
+        <label>Neues Cover hochladen (optional)<input type="file" name="cover" accept="image/*"></label>
         <?php if ($editing['cover']): ?><p><img src="<?= e(url($editing['cover'])) ?>" style="height:60px;border-radius:6px"></p><?php endif; ?>
+        <?php if (!empty($serverImages)): ?>
+        <label>— oder vorhandenes Cover aus Server-Dateien wählen
+            <select onchange="document.querySelector('[name=existing_cover]').value=this.value">
+                <option value="">– Neue Datei hochladen –</option>
+                <?php foreach ($serverImages as $sf): ?>
+                    <option value="<?= e($sf) ?>" <?= $editing['cover']===$sf?'selected':'' ?>>
+                        <?= e(ltrim(str_replace('assets/', '', $sf), '/')) ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </label>
+        <?php endif; ?>
         <button class="btn-primary" type="submit">Speichern</button>
         <a class="btn-ghost" href="tracks.php">Abbrechen</a>
     </form>

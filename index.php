@@ -124,22 +124,34 @@ include __DIR__ . '/includes/header.php';
             <div class="videos">
                 <?php foreach ($videos as $v): ?>
                     <div class="video reveal">
-                        <div class="video-frame">
-                            <?php if (($v['type'] ?? '') === 'youtube' || ($v['type'] ?? '') === 'vimeo'):
-                                $vsrc = $v['src'];
-                                if ($v['type'] === 'youtube' && strpos($vsrc, 'enablejsapi=') === false) {
+                        <?php
+                            $vtype  = $v['type'] ?? '';
+                            $vsrc   = trim((string)($v['src'] ?? ''));
+                            $vthumb = trim((string)($v['thumbnail'] ?? ''));
+                            if ($vthumb === '' && $vtype === 'youtube' && preg_match('#youtube\.com/embed/([\w-]+)#', $vsrc, $_tm)) {
+                                $vthumb = 'https://img.youtube.com/vi/' . $_tm[1] . '/hqdefault.jpg';
+                            }
+                            $vthumbUrl  = $vthumb === '' ? '' : (preg_match('#^https?://#', $vthumb) ? $vthumb : url($vthumb));
+                            $frameStyle = $vthumbUrl !== '' ? ' style="background:url(\'' . e($vthumbUrl) . '\') center/cover no-repeat"' : '';
+                            if ($vtype === 'youtube' || $vtype === 'vimeo') {
+                                if ($vtype === 'youtube' && strpos($vsrc, 'enablejsapi=') === false) {
                                     $vsrc .= (strpos($vsrc, '?') === false ? '?' : '&') . 'enablejsapi=1';
                                 }
-                                if ($v['type'] === 'vimeo' && strpos($vsrc, 'api=') === false) {
+                                if ($vtype === 'vimeo' && strpos($vsrc, 'api=') === false) {
                                     $vsrc .= (strpos($vsrc, '?') === false ? '?' : '&') . 'api=1';
                                 }
-                            ?>
+                            }
+                        ?>
+                        <div class="video-frame"<?= $frameStyle ?>>
+                            <?php if (($vtype === 'youtube' || $vtype === 'vimeo') && $vsrc !== ''): ?>
                                 <iframe src="<?= e($vsrc) ?>" title="<?= e($v['title']) ?>"
                                         frameborder="0" loading="lazy"
                                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                         allowfullscreen></iframe>
+                            <?php elseif ($vtype === 'upload' && $vsrc !== ''): ?>
+                                <video controls preload="none" src="<?= e(url($vsrc)) ?>"<?= $vthumbUrl !== '' ? ' poster="' . e($vthumbUrl) . '"' : '' ?>></video>
                             <?php else: ?>
-                                <video controls preload="none" src="<?= e(url($v['src'])) ?>"></video>
+                                <p class="muted" style="text-align:center;padding:2rem">Kein Video verfügbar.</p>
                             <?php endif; ?>
                         </div>
                         <h4><?= e($v['title']) ?></h4>

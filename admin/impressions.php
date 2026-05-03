@@ -89,14 +89,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $type = $it['type'] ?? '';
             $src  = (string)($it['src'] ?? '');
             $isUploadedVideo = $type === 'video' && (($it['video_kind'] ?? '') === 'upload');
-            if (($type === 'image' || $isUploadedVideo) && $src !== '' && !preg_match('#^https?://#i', $src)) {
-                $rel = ltrim($src, '/');
-                $abs = BASE_PATH . '/' . $rel;
-                $real = realpath($abs);
-                $assetsRoot = realpath(BASE_PATH . '/assets');
-                if ($real && $assetsRoot && str_starts_with($real, $assetsRoot) && is_file($real)) {
-                    @unlink($real);
-                }
+            if ($type === 'image' || $isUploadedVideo) {
+                maybe_unlink_asset($src, 'impressions', $iid);
             }
             break;
         }
@@ -110,18 +104,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ids = $_POST['ids'] ?? [];
         if (!is_array($ids)) $ids = [];
         $ids = array_map('strval', $ids);
-        $assetsRoot = realpath(BASE_PATH . '/assets');
         $removed = 0;
         foreach ($items as $it) {
             if (!in_array((string)($it['id'] ?? ''), $ids, true)) continue;
             $type = $it['type'] ?? '';
             $src  = (string)($it['src'] ?? '');
             $isUploadedVideo = $type === 'video' && (($it['video_kind'] ?? '') === 'upload');
-            if (($type === 'image' || $isUploadedVideo) && $src !== '' && !preg_match('#^https?://#i', $src)) {
-                $real = realpath(BASE_PATH . '/' . ltrim($src, '/'));
-                if ($real && $assetsRoot && str_starts_with($real, $assetsRoot) && is_file($real)) {
-                    @unlink($real);
-                }
+            if ($type === 'image' || $isUploadedVideo) {
+                maybe_unlink_asset($src, 'impressions', (string)($it['id'] ?? ''));
             }
             $removed++;
         }
@@ -233,6 +223,9 @@ if ($action === 'edit' || $action === 'new') {
     if ($action === 'edit') {
         foreach ($items as $it) if (($it['id'] ?? '') === $id) { $editing = array_merge($editing, $it); break; }
     }
+    $imgExt = ['jpg','jpeg','png','webp','avif','gif'];
+    $serverImages = scan_asset_files('img', $imgExt);
+    $serverVideos = scan_asset_files('video', ['mp4','webm','mov']);
     ?>
     <h1><?= $action === 'new' ? 'Neue Impression' : 'Impression bearbeiten' ?></h1>
     <form method="post" class="form" enctype="multipart/form-data">
@@ -255,10 +248,22 @@ if ($action === 'edit' || $action === 'new') {
                 <p class="muted">Aktuell: <code><?= e($editing['src']) ?></code></p>
                 <img src="<?= e(url($editing['src'])) ?>" alt="" style="max-width:240px;border-radius:8px;margin-bottom:.5rem">
             <?php endif; ?>
-            <label>Bild hochladen
+            <label>Neues Bild hochladen
                 <input type="file" name="image_file" accept="image/*">
             </label>
             <p class="muted" style="margin:.25rem 0">Erlaubt: jpg, jpeg, png, webp, avif, gif. Max. 20 MB.</p>
+            <?php if (!empty($serverImages)): ?>
+            <label>— oder vorhandene Server-Datei wählen
+                <select id="srv-img" onchange="document.querySelector('[name=existing_src]').value=this.value">
+                    <option value="">– Neue Datei hochladen –</option>
+                    <?php foreach ($serverImages as $sf): ?>
+                        <option value="<?= e($sf) ?>" <?= $editing['src']===$sf?'selected':'' ?>>
+                            <?= e(ltrim(str_replace('assets/', '', $sf), '/')) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
+            <?php endif; ?>
         </fieldset>
 
         <fieldset class="impr-block" data-for="video">
@@ -275,11 +280,23 @@ if ($action === 'edit' || $action === 'new') {
                        value="<?= e($editing['type'] === 'video' && in_array(($editing['video_kind'] ?? ''), ['youtube','vimeo'], true) ? $editing['src'] : '') ?>"
                        placeholder="https://www.youtube.com/watch?v=...">
             </label>
-            <label>Datei (nur „Eigene Datei“)
+            <label>Neue Datei hochladen (nur „Eigene Datei")
                 <input type="file" name="video_file" accept="video/*">
             </label>
             <?php if ($editing['type'] === 'video' && ($editing['video_kind'] ?? '') === 'upload' && !empty($editing['src'])): ?>
                 <p class="muted">Aktuelle Datei: <code><?= e($editing['src']) ?></code></p>
+            <?php endif; ?>
+            <?php if (!empty($serverVideos)): ?>
+            <label>— oder vorhandene Server-Datei wählen
+                <select id="srv-vid" onchange="document.querySelector('[name=existing_src]').value=this.value">
+                    <option value="">– Neue Datei hochladen –</option>
+                    <?php foreach ($serverVideos as $sf): ?>
+                        <option value="<?= e($sf) ?>" <?= ($editing['src']===$sf && ($editing['video_kind']??'')==='upload')?'selected':'' ?>>
+                            <?= e(ltrim(str_replace('assets/', '', $sf), '/')) ?>
+                        </option>
+                    <?php endforeach; ?>
+                </select>
+            </label>
             <?php endif; ?>
         </fieldset>
 

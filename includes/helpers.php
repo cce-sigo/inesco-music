@@ -242,6 +242,94 @@ function nav_is_visible(string $id): bool {
     return true;
 }
 
+/**
+ * Scans an assets sub-directory recursively and returns sorted relative paths
+ * (e.g. "assets/img/impressions/foo.jpg") filtered by allowed extensions.
+ */
+function scan_asset_files(string $subdir, array $allowedExt): array {
+    $baseAbs = rtrim(str_replace('\\', '/', BASE_PATH . '/assets/' . trim($subdir, '/\\')), '/');
+    if (!is_dir($baseAbs)) return [];
+    $results = [];
+    $iter = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($baseAbs, FilesystemIterator::SKIP_DOTS),
+        RecursiveIteratorIterator::LEAVES_ONLY
+    );
+    foreach ($iter as $file) {
+        if (!$file->isFile()) continue;
+        $ext = strtolower($file->getExtension());
+        if (!in_array($ext, $allowedExt, true)) continue;
+        $abs = str_replace('\\', '/', $file->getPathname());
+        $rel = 'assets/' . trim($subdir, '/\\') . '/' . ltrim(substr($abs, strlen($baseAbs)), '/');
+        $results[] = $rel;
+    }
+    sort($results, SORT_NATURAL | SORT_FLAG_CASE);
+    return $results;
+}
+
+/**
+ * Checks whether a relative asset path (e.g. "assets/img/foo.jpg") is still
+ * referenced in ANY data JSON file, optionally ignoring one specific entry
+ * (the one being deleted right now).
+ *
+ * @param string $relPath   The relative path to check (as stored in JSON).
+ * @param string $skipJson  JSON store name to skip one entry in (e.g. 'impressions').
+ * @param string $skipId    The id value of the entry to skip.
+ */
+function asset_in_use(string $relPath, string $skipJson = '', string $skipId = ''): bool {
+    if ($relPath === '' || preg_match('#^https?://#i', $relPath)) return false;
+    $relPath = ltrim(str_replace('\\', '/', $relPath), '/');
+
+    // All JSON stores that may contain asset paths
+    $stores = ['impressions', 'videos', 'tracks', 'members', 'sponsors', 'concerts', 'content'];
+    // Fields that can hold asset paths (flat or nested)
+    $fields = ['src', 'file', 'cover', 'thumbnail', 'image', 'logo', 'photo', 'img'];
+
+    foreach ($stores as $store) {
+        $items = read_json($store, []);
+        if (!is_array($items)) continue;
+
+        // content.json can be a nested object — flatten one level for hero images etc.
+        $rows = isset($items[0]) ? $items : [$items];
+
+        foreach ($rows as $item) {
+            if (!is_array($item)) continue;
+            $itemId = (string)($item['id'] ?? '');
+            // Skip the entry currently being deleted
+            if ($store === $skipJson && $skipId !== '' && $itemId === $skipId) continue;
+
+            foreach ($fields as $f) {
+                $val = $item[$f] ?? null;
+                if ($val === null) continue;
+                if (!is_array($val)) $val = [$val];
+                foreach ($val as $v) {
+                    if (!is_string($v)) continue;
+                    $v = ltrim(str_replace('\\', '/', $v), '/');
+                    if ($v === $relPath) return true;
+                }
+            }
+        }
+    }
+    return false;
+}
+
+/**
+ * Safely deletes a local asset file only when no other entry still references it.
+ * Returns true if the file was deleted, false if kept or not found.
+ */
+function maybe_unlink_asset(string $relPath, string $skipJson = '', string $skipId = ''): bool {
+    if ($relPath === '' || preg_match('#^https?://#i', $relPath)) return false;
+    if (asset_in_use($relPath, $skipJson, $skipId)) return false;
+
+    $rel  = ltrim(str_replace('\\', '/', $relPath), '/');
+    $abs  = BASE_PATH . '/' . $rel;
+    $real = realpath($abs);
+    $assetsRoot = realpath(BASE_PATH . '/assets');
+    if ($real && $assetsRoot && str_starts_with($real, $assetsRoot) && is_file($real)) {
+        return (bool)@unlink($real);
+    }
+    return false;
+}
+
 function is_logged_in(): bool {
     return !empty($_SESSION['admin_user']);
 }
