@@ -121,6 +121,15 @@ $navBase    = $isHome ? '' : url('');
     foreach ($_ldGraphItems as $_ldItem): ?>
     <script type="application/ld+json"><?= json_encode($_ldItem, $_jsonEncodeFlags) ?></script>
     <?php endforeach; ?>
+
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-BPGBYHS59V"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-BPGBYHS59V');
+    </script>
 </head>
 <body>
 <header class="site-header" id="top">
