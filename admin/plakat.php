@@ -421,14 +421,14 @@ include __DIR__ . '/header.php';
 /* ===== Layout ===== */
 .pk-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(360px, 42%);
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 44%);
     gap: 24px;
     align-items: start;
 }
-.pk-preview-wrap { min-width: 0; overflow: auto; }
+.pk-preview-wrap { min-width: 0; overflow-x: auto; overflow-y: visible; }
 #pkScaler { width: 100%; }
 
-/* Editor: sticky, container for card-grid queries */
+/* Editor: sticky, scrollable */
 .pk-editor {
     position: sticky;
     top: 16px;
@@ -440,6 +440,7 @@ include __DIR__ . '/header.php';
     padding: 14px 16px;
     container-type: inline-size;
     container-name: pk-editor;
+    box-sizing: border-box;
 }
 .pk-editor > form {
     display: flex;
@@ -448,20 +449,17 @@ include __DIR__ . '/header.php';
 }
 .pk-editor h2 { margin: 0 0 .5rem; font-size: 1.1rem; }
 
-/* Cards: 1 col default, grow with editor width via container queries */
+/* Cards: fill editor cleanly, no overflow */
 .pk-editor-cards {
     display: grid;
-    grid-template-columns: 1fr;
+    grid-template-columns: 1fr 1fr;
     gap: 12px;
     align-items: start;
 }
-@container pk-editor (min-width: 380px) {
-    .pk-editor-cards { grid-template-columns: 1fr 1fr; }
+@container pk-editor (min-width: 560px) {
+    .pk-editor-cards { grid-template-columns: repeat(3, 1fr); }
 }
-@container pk-editor (min-width: 620px) {
-    .pk-editor-cards { grid-template-columns: 1fr 1fr 1fr; }
-}
-@container pk-editor (min-width: 860px) {
+@container pk-editor (min-width: 780px) {
     .pk-editor-cards { grid-template-columns: repeat(4, 1fr); }
 }
 
