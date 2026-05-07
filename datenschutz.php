@@ -43,7 +43,7 @@ include __DIR__ . '/includes/header.php';
         <h2>2. Allgemeines zur Datenverarbeitung</h2>
         <p>
             Wir verarbeiten personenbezogene Daten ausschließlich auf Grundlage der gesetzlichen
-            Bestimmungen (DSGVO, DSG, TKG 2003). Personenbezogene Daten sind alle Informationen,
+            Bestimmungen (DSGVO, DSG, TKG 2021). Personenbezogene Daten sind alle Informationen,
             die sich auf eine identifizierte oder identifizierbare natürliche Person beziehen.
         </p>
 

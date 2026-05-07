@@ -31,6 +31,18 @@ include __DIR__ . '/includes/header.php';
             <?php if ($zip || $city): ?><?= e(trim($zip . ' ' . $city)) ?><?php if ($country): ?>, <?= e($country) ?><?php endif; ?><?php endif; ?>
         </p>
 
+        <h2>Unternehmensgegenstand</h2>
+        <p>
+            Musikdarbietung und Konzertveranstaltung (Duo INESCO – Ines &amp; Sigo).
+        </p>
+
+        <h2>Grundlegende Richtung / Blattlinie</h2>
+        <p>
+            Diese Website dient der Eigenpräsentation und Information zum Musikduo
+            INESCO – Ines &amp; Sigo. Sie enthält Informationen zu Konzerten, Repertoire,
+            Bandmitgliedern sowie Kontaktmöglichkeiten für Buchungsanfragen.
+        </p>
+
         <h2>Kontakt</h2>
         <p>
             <?php if (!empty($contact['email'])): ?>
