@@ -70,20 +70,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 include __DIR__ . '/header.php';
 ?>
-<h1>Plakat</h1>
-<p class="muted" style="margin-top:0">
-    Live-Vorschau des Konzertplakats – Felder rechts ausfüllen, speichern und ausdrucken oder als PDF exportieren.
-</p>
+<div class="pk-topbar">
+    <h1>Plakat</h1>
+    <span class="muted">Live-Vorschau – Felder rechts ausfüllen, speichern &amp; als PDF exportieren.</span>
+    <div class="pk-topbar-right">
+        <label class="pk-zoom-ctrl">
+            <span id="pkZoomLabel">100%</span>
+            <input type="range" id="pkZoomSlider" min="30" max="200" step="2" value="100">
+        </label>
+        <a class="btn" href="<?= e(url('plakat.php')) ?>" target="_blank">Drucken&nbsp;/ PDF</a>
+    </div>
+</div>
 
 <div class="pk-layout">
 
     <!-- ===== LINKS: Vorschau ===== -->
-    <div class="pk-preview-wrap">
-        <div class="pk-toolbar">
-            <a class="btn" href="<?= e(url('plakat.php')) ?>" target="_blank">Drucken / PDF speichern</a>
-        </div>
+    <div class="pk-preview-wrap" id="pkPreviewWrap">
 
         <!-- Plakat-Canvas -->
+        <div id="pkScaler">
         <div class="pk-canvas" id="pkCanvas">
             <img class="pk-bg" src="<?= e(url('images/Plakat-INESCO_neutral.png')) ?>" alt="Plakat Hintergrund">
 
@@ -133,6 +138,7 @@ include __DIR__ . '/header.php';
                      style="<?= $data['venue_logo'] ? '' : 'display:none' ?>">
             </div>
         </div><!-- /pk-canvas -->
+        </div><!-- /pkScaler -->
     </div>
 
     <!-- ===== RECHTS: Editor ===== -->
@@ -363,17 +369,66 @@ include __DIR__ . '/header.php';
 </div>
 
 <style>
+/* ===== Full-width override for plakat page ===== */
+.admin-main {
+    max-width: none !important;
+    width: 100% !important;
+    padding-left: 2vw !important;
+    padding-right: 2vw !important;
+}
+
+/* ===== Compact topbar ===== */
+.pk-topbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 10px;
+}
+.pk-topbar h1 {
+    margin: 0;
+    font-size: 1.2rem;
+    flex-shrink: 0;
+    line-height: 1;
+}
+.pk-topbar .muted {
+    font-size: .82rem;
+    flex: 1;
+    min-width: 0;
+}
+.pk-topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-shrink: 0;
+    margin-left: auto;
+}
+.pk-zoom-ctrl {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: .82rem;
+    white-space: nowrap;
+    cursor: default;
+    user-select: none;
+}
+.pk-zoom-ctrl input[type=range] {
+    width: 90px;
+    cursor: pointer;
+    accent-color: #d4a544;
+}
+
 /* ===== Layout ===== */
 .pk-layout {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 560px;
+    grid-template-columns: minmax(0, 1fr) minmax(360px, 42%);
     gap: 24px;
     align-items: start;
 }
-.pk-preview-wrap { min-width: 0; }
-.pk-toolbar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+.pk-preview-wrap { min-width: 0; overflow: auto; }
+#pkScaler { width: 100%; }
 
-/* Editor: sticky panel, cards inside in a 2-col grid */
+/* Editor: sticky, container for card-grid queries */
 .pk-editor {
     position: sticky;
     top: 16px;
@@ -383,6 +438,8 @@ include __DIR__ . '/header.php';
     border: 1px solid rgba(212,168,90,.25);
     border-radius: 8px;
     padding: 14px 16px;
+    container-type: inline-size;
+    container-name: pk-editor;
 }
 .pk-editor > form {
     display: flex;
@@ -390,12 +447,24 @@ include __DIR__ . '/header.php';
     gap: 8px;
 }
 .pk-editor h2 { margin: 0 0 .5rem; font-size: 1.1rem; }
+
+/* Cards: 1 col default, grow with editor width via container queries */
 .pk-editor-cards {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr;
     gap: 12px;
     align-items: start;
 }
+@container pk-editor (min-width: 380px) {
+    .pk-editor-cards { grid-template-columns: 1fr 1fr; }
+}
+@container pk-editor (min-width: 620px) {
+    .pk-editor-cards { grid-template-columns: 1fr 1fr 1fr; }
+}
+@container pk-editor (min-width: 860px) {
+    .pk-editor-cards { grid-template-columns: repeat(4, 1fr); }
+}
+
 .pk-editor fieldset {
     border: 1px solid rgba(212,168,90,.3);
     border-radius: 8px;
@@ -428,12 +497,9 @@ include __DIR__ . '/header.php';
 }
 .pk-editor .btn { align-self: flex-start; }
 
-@media (max-width: 1100px) {
+@media (max-width: 1000px) {
     .pk-layout { grid-template-columns: 1fr; }
     .pk-editor { position: static; max-height: none; }
-}
-@media (max-width: 600px) {
-    .pk-editor-cards { grid-template-columns: 1fr; }
 }
 
 /* ===== Plakat-Canvas ===== */
@@ -566,8 +632,10 @@ include __DIR__ . '/header.php';
 @page { size: A3 portrait; margin: 0; }
 @media print {
     html, body, .admin-main { background: #fff !important; }
-    .admin-header, .admin-footer, .pk-toolbar, .pk-editor, h1, h1 + p { display: none !important; }
+    .admin-header, .admin-footer, .pk-topbar, .pk-editor { display: none !important; }
     .pk-layout { display: block; }
+    .pk-preview-wrap { overflow: visible; }
+    #pkScaler { width: 100% !important; }
     .pk-bg { max-width: 100%; width: 100%; }
 }
 </style>
@@ -673,6 +741,17 @@ include __DIR__ . '/header.php';
     }
     bindUpload('fVenueLogoFile',   'fVenueLogo',   'pkVenueLogo');
     bindUpload('fPartnerLogoFile', 'fPartnerLogo', 'pkPartnerLogo');
+
+    /* Zoom slider */
+    var zoomSlider = document.getElementById('pkZoomSlider');
+    var zoomLabel  = document.getElementById('pkZoomLabel');
+    var scaler     = document.getElementById('pkScaler');
+    if (zoomSlider && scaler) {
+        zoomSlider.addEventListener('input', function () {
+            scaler.style.width = zoomSlider.value + '%';
+            if (zoomLabel) zoomLabel.textContent = zoomSlider.value + '%';
+        });
+    }
 
     /* cqw polyfill: use container-type on canvas */
     var canvas = document.getElementById('pkCanvas');

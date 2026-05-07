@@ -22,7 +22,7 @@ a:hover { text-decoration: underline; }
 .admin-header {
     background: #120a0c; border-bottom: 1px solid var(--line); padding: 1rem 0;
 }
-.admin-header .container { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
+.admin-header .container { width: auto; max-width: none; margin: 0; padding: 0 2vw; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 1rem; }
 .admin-header .brand { font-weight: 700; letter-spacing: .15em; color: var(--gold); }
 .admin-header nav { display: flex; gap: 1rem; flex-wrap: wrap; }
 .admin-header nav a { color: var(--text); padding: .35rem .6rem; border-radius: 6px; }
