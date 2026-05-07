@@ -12,7 +12,10 @@
 <header class="admin-header">
     <div class="container">
         <a class="brand" href="<?= e(url('admin/')) ?>">INESCO Admin</a>
-        <nav>
+        <button class="nav-toggle" id="navToggle" aria-label="Menü" aria-expanded="false" aria-controls="adminNav">
+            <span></span><span></span><span></span>
+        </button>
+        <nav id="adminNav">
             <a href="<?= e(url('admin/index.php')) ?>">Dashboard</a>
             <a href="<?= e(url('admin/content.php')) ?>">Texte</a>
             <a href="<?= e(url('admin/navigation.php')) ?>">Navigation</a>
@@ -24,10 +27,31 @@
             <a href="<?= e(url('admin/sponsors.php')) ?>">Sponsoren</a>
             <a href="<?= e(url('admin/contact.php')) ?>">Kontakt</a>
             <a href="<?= e(url('admin/visitenkarte.php')) ?>">Visitenkarte</a>
+            <a href="<?= e(url('admin/plakat.php')) ?>">Plakat</a>
             <a class="logout" href="<?= e(url('admin/logout.php')) ?>">Logout (<?= e($_SESSION['admin_user'] ?? '') ?>)</a>
         </nav>
     </div>
 </header>
+<script>
+(function(){
+    var btn = document.getElementById('navToggle');
+    var nav = document.getElementById('adminNav');
+    if (!btn || !nav) return;
+    btn.addEventListener('click', function(){
+        var open = nav.classList.toggle('open');
+        btn.classList.toggle('open', open);
+        btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+    // Close on outside click
+    document.addEventListener('click', function(e){
+        if (!btn.contains(e.target) && !nav.contains(e.target)) {
+            nav.classList.remove('open');
+            btn.classList.remove('open');
+            btn.setAttribute('aria-expanded', 'false');
+        }
+    });
+})();
+</script>
 <main class="admin-main container">
 <?php foreach (flash_pop() as $f): ?>
     <p class="msg <?= e($f['type']) ?>"><?= e($f['msg']) ?></p>

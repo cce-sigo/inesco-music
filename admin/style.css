@@ -29,6 +29,48 @@ a:hover { text-decoration: underline; }
 .admin-header nav a:hover { background: rgba(255,255,255,.06); text-decoration: none; }
 .admin-header nav a.logout { color: var(--muted); margin-left: auto; }
 
+/* Hamburger button */
+.nav-toggle {
+    display: none;
+    flex-direction: column; justify-content: center; gap: 5px;
+    width: 36px; height: 36px; padding: 6px;
+    background: none; border: 1px solid var(--line); border-radius: 6px;
+    cursor: pointer;
+}
+.nav-toggle span {
+    display: block; width: 100%; height: 2px;
+    background: var(--text); border-radius: 2px;
+    transition: transform .25s, opacity .25s;
+    transform-origin: center;
+}
+.nav-toggle.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-toggle.open span:nth-child(2) { opacity: 0; }
+.nav-toggle.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+@media (max-width: 820px) {
+    .nav-toggle { display: flex; }
+    .admin-header .container { flex-wrap: nowrap; position: relative; }
+    #adminNav {
+        display: none;
+        position: absolute; top: 100%; left: 0; right: 0;
+        background: #120a0c;
+        border-top: 1px solid var(--line);
+        border-bottom: 1px solid var(--line);
+        flex-direction: column;
+        gap: 0;
+        padding: .5rem 0;
+        z-index: 200;
+    }
+    #adminNav.open { display: flex; }
+    #adminNav a {
+        padding: .65rem 1.2rem;
+        border-radius: 0;
+        border-bottom: 1px solid var(--line);
+    }
+    #adminNav a:last-child { border-bottom: none; }
+    #adminNav a.logout { margin-left: 0; }
+}
+
 .admin-main { padding: 2rem 0 4rem; }
 .admin-main h1 { font-size: 1.6rem; margin: 0 0 1.2rem; display: flex; align-items: center; gap: 1rem; }
 
