@@ -331,7 +331,7 @@ include __DIR__ . '/header.php';
 
             <!-- ── Event-Untertitel ── -->
             <fieldset>
-                <legend>Event-Untertitel (optional)</legend>
+                <legend>Event-Untertitel</legend>
                 <div class="pk-field-row">
                     <label class="pk-field-main">Text
                         <input type="text" name="event_subtitle" id="fEventSub"
@@ -449,17 +449,17 @@ include __DIR__ . '/header.php';
 }
 .pk-editor h2 { margin: 0 0 .5rem; font-size: 1.1rem; }
 
-/* Cards: fill editor cleanly, no overflow */
+/* Cards: 2 → 3 columns based on editor width */
 .pk-editor-cards {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 12px;
     align-items: start;
 }
-@container pk-editor (min-width: 560px) {
+@container pk-editor (min-width: 600px) {
     .pk-editor-cards { grid-template-columns: repeat(3, 1fr); }
 }
-@container pk-editor (min-width: 780px) {
+@container pk-editor (min-width: 840px) {
     .pk-editor-cards { grid-template-columns: repeat(4, 1fr); }
 }
 
