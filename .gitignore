@@ -28,13 +28,13 @@ data/tracks.json
 data/videos.json
 
 # ============================================================
-# Media files
+# Media files – user-uploaded content stays local only
 # ============================================================
 assets/audio/
 assets/video/
 assets/img/hero/
 assets/img/impressions/
-images/
+# Note: images/ (static site assets like poster bg, logos) IS tracked
 
 # ============================================================
 # Apache local overrides (keep the production .htaccess)
