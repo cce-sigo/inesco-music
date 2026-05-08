@@ -95,6 +95,56 @@
             // Correct initial anchor position once layout and fixed header are painted.
             setTimeout(() => { scrollToHash(window.location.hash, false); }, 0);
         }
+
+        // Dynamic overflow detection: switch to hamburger whenever nav items don't fit.
+        const headerInner = header ? header.querySelector('.header-inner') : null;
+        const brandEl = document.querySelector('.brand');
+        const navUl = nav.querySelector('ul');
+        const navToggle = header ? header.querySelector('.nav-toggle') : null;
+
+        const checkNavFit = () => {
+            if (!header || !headerInner || !nav || !navUl) return;
+
+            // Measure nav's natural (unwrapped) width via inline style override.
+            // We force it off-screen / invisible so there's no flash.
+            const hadOverflow = header.classList.contains('nav-overflow');
+            const prevStyle = nav.getAttribute('style') || '';
+            const prevUlDir = navUl.style.flexDirection;
+            const prevUlWrap = navUl.style.flexWrap;
+            const prevToggleDisplay = navToggle ? navToggle.style.display : '';
+
+            // width:max-content makes the nav shrink-wrap to content,
+            // so getBoundingClientRect().width is the exact natural content width.
+            if (hadOverflow) header.classList.remove('nav-overflow');
+            if (navToggle) navToggle.style.display = 'none';
+            nav.style.cssText = 'position:fixed;top:-9999px;left:0;width:max-content;visibility:hidden;max-height:none;overflow:visible;pointer-events:none;';
+            navUl.style.flexDirection = 'row';
+            navUl.style.flexWrap = 'nowrap';
+            navUl.offsetHeight; // force reflow
+
+            const navNaturalWidth = navUl.getBoundingClientRect().width;
+            const brandWidth = brandEl ? brandEl.offsetWidth : 0;
+            const available = headerInner.clientWidth - brandWidth;
+
+            nav.style.cssText = prevStyle;
+            navUl.style.flexDirection = prevUlDir;
+            navUl.style.flexWrap = prevUlWrap;
+            if (navToggle) navToggle.style.display = prevToggleDisplay;
+
+            const overflows = navNaturalWidth > available - 4; // 4px tolerance
+            header.classList.toggle('nav-overflow', overflows);
+
+            if (!overflows && nav.classList.contains('open')) {
+                nav.classList.remove('open');
+                toggle.setAttribute('aria-expanded', 'false');
+            }
+        };
+
+        if (typeof ResizeObserver !== 'undefined' && headerInner) {
+            new ResizeObserver(checkNavFit).observe(headerInner);
+        }
+        window.addEventListener('resize', checkNavFit);
+        checkNavFit();
     }
 
     // Reveal on scroll
