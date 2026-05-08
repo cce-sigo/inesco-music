@@ -25,14 +25,76 @@
     const toggle = document.querySelector('.nav-toggle');
     const nav = document.querySelector('.main-nav');
     if (toggle && nav) {
+        const header = document.querySelector('.site-header');
+        const headerOffset = () => {
+            if (!header) return 0;
+            return Math.ceil(header.getBoundingClientRect().height) + 10;
+        };
+
+        const normalizePath = (path) => {
+            if (!path) return '/';
+            let p = path;
+            if (p.length > 1 && p.endsWith('/')) p = p.slice(0, -1);
+            return p;
+        };
+
+        const resolveHash = (href) => {
+            if (!href) return null;
+            if (href.startsWith('#')) return href;
+            try {
+                const u = new URL(href, window.location.href);
+                if (normalizePath(u.pathname) !== normalizePath(window.location.pathname)) return null;
+                return u.hash || null;
+            } catch (e) {
+                return null;
+            }
+        };
+
+        const scrollToHash = (hash, updateHistory = true) => {
+            if (!hash || hash.length < 2) return false;
+            const id = decodeURIComponent(hash.slice(1));
+            const target = document.getElementById(id);
+            if (!target) return false;
+
+            const scrollNow = (behavior) => {
+                const isFixed = window.getComputedStyle(target).position === 'fixed';
+                const y = isFixed ? 0 : target.getBoundingClientRect().top + window.scrollY - headerOffset();
+                window.scrollTo({ top: Math.max(0, y), behavior });
+            };
+
+            scrollNow('smooth');
+            if (updateHistory) history.replaceState(null, '', hash);
+            return true;
+        };
+
         toggle.addEventListener('click', () => {
             const open = nav.classList.toggle('open');
             toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
         });
-        nav.querySelectorAll('a').forEach(a => a.addEventListener('click', () => {
+
+        const handleHashLink = (a, e) => {
+            const hash = resolveHash(a.getAttribute('href'));
+            if (!hash) return;
+            e.preventDefault();
+            scrollToHash(hash);
+        };
+
+        nav.querySelectorAll('a').forEach(a => a.addEventListener('click', (e) => {
             nav.classList.remove('open');
             toggle.setAttribute('aria-expanded', 'false');
+            handleHashLink(a, e);
         }));
+
+        // Brand/logo link (outside .main-nav)
+        const brand = document.querySelector('.brand');
+        if (brand) {
+            brand.addEventListener('click', (e) => handleHashLink(brand, e));
+        }
+
+        if (window.location.hash) {
+            // Correct initial anchor position once layout and fixed header are painted.
+            setTimeout(() => { scrollToHash(window.location.hash, false); }, 0);
+        }
     }
 
     // Reveal on scroll

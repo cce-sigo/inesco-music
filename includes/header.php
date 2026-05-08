@@ -16,6 +16,7 @@ $siteBaseUrl  = $_proto . '://' . $_host . rtrim(BASE_URL, '/') . '/';
 $scriptName = basename($_SERVER['SCRIPT_NAME'] ?? '');
 $isHome     = ($scriptName === '' || $scriptName === 'index.php');
 $navBase    = $isHome ? '' : url('');
+$brandHref  = $isHome ? '#top' : url('');
 ?><!DOCTYPE html>
 <html lang="de">
 <head>
@@ -134,7 +135,7 @@ $navBase    = $isHome ? '' : url('');
 <body>
 <header class="site-header" id="top">
     <div class="container header-inner">
-        <a class="brand" href="<?= e(url('')) ?>">
+        <a class="brand" href="<?= e($brandHref) ?>">
             <img src="<?= e(header_logo_url()) ?>" alt="INESCO Logo" width="40" height="40">
             <span>INESCO</span>
         </a>
