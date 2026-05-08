@@ -25,9 +25,9 @@ include __DIR__ . '/header.php';
     <!-- ===== LINKS: Karten + Toolbar ===== -->
     <div class="vk-preview">
         <div class="vk-toolbar">
-            <button type="button" class="btn" id="vkPrintAll">Beide Seiten drucken / PDF</button>
-            <button type="button" class="btn btn-outline" id="vkPrintFront">Vorderseite als PDF</button>
-            <button type="button" class="btn btn-outline" id="vkPrintBack">Rückseite als PDF</button>
+            <button type="button" class="btn" id="vkPrintAll">Beide Seiten als PDF downloaden</button>
+            <button type="button" class="btn btn-outline" id="vkPrintFront">Vorderseite als PDF downloaden</button>
+            <button type="button" class="btn btn-outline" id="vkPrintBack">Rückseite als PDF downloaden</button>
             <button type="button" class="btn btn-outline" id="vkRefresh">QR aktualisieren</button>
             <button type="button" class="btn btn-outline" id="vkReset">Zurücksetzen</button>
         </div>
@@ -242,6 +242,8 @@ include __DIR__ . '/header.php';
 </style>
 
 <script src="<?= e(url('assets/js/vendor/qrcode.min.js')) ?>"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 (function () {
     var BASE = <?= json_encode(rtrim(BASE_URL, '/') . '/') ?>;
@@ -362,20 +364,101 @@ include __DIR__ . '/header.php';
         });
     }
     function renderAll(s) { applyToCard(s); renderQr(s); }
-    function clearPrintMode() {
-        document.documentElement.removeAttribute('data-vk-print');
+
+    function buildFilename(side) {
+        var d = new Date();
+        var yyyy = d.getFullYear();
+        var mm = String(d.getMonth() + 1).padStart(2, '0');
+        var dd = String(d.getDate()).padStart(2, '0');
+        var suffix = side === 'front' ? 'Vorderseite' : (side === 'back' ? 'Rueckseite' : 'Beide');
+        return 'INESCO_Visitenkarte_' + suffix + '_' + yyyy + '-' + mm + '-' + dd + '.pdf';
     }
-    function printOnly(side) {
-        document.documentElement.setAttribute('data-vk-print', side);
-        window.print();
+
+    function waitForImages(root) {
+        var imgs = root.querySelectorAll('img');
+        var jobs = [];
+        for (var i = 0; i < imgs.length; i++) {
+            (function (img) {
+                if (img.complete && img.naturalWidth > 0) return;
+                jobs.push(new Promise(function (resolve) {
+                    img.addEventListener('load', resolve, { once: true });
+                    img.addEventListener('error', resolve, { once: true });
+                }));
+            })(imgs[i]);
+        }
+        return Promise.all(jobs);
+    }
+
+    function nextPaint() {
+        return new Promise(function (resolve) {
+            requestAnimationFrame(function () {
+                requestAnimationFrame(resolve);
+            });
+        });
+    }
+
+    async function captureCard(el) {
+        await waitForImages(el);
+        return await html2canvas(el, {
+            scale: 3,
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: null,
+            logging: false
+        });
+    }
+
+    async function downloadPdf(side) {
+        if (typeof html2canvas === 'undefined' || !window.jspdf || !window.jspdf.jsPDF) {
+            alert('PDF-Bibliothek konnte nicht geladen werden. Bitte Seite neu laden.');
+            return;
+        }
+
+        state = readState();
+        renderAll(state);
+        save(state);
+        await nextPaint();
+
+        var front = $('vkFront');
+        var back = document.querySelector('.vk-card.back');
+        if (!front || !back) {
+            alert('Karte konnte nicht gefunden werden.');
+            return;
+        }
+
+        try {
+            var jsPDF = window.jspdf.jsPDF;
+            var pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            var cardW = 85;
+            var cardH = 55;
+            var topY = 15;
+            var singleX = 15;
+            var gap = 8;
+            var bothX = (210 - (cardW * 2 + gap)) / 2;
+
+            if (side === 'front') {
+                var frontCanvas = await captureCard(front);
+                pdf.addImage(frontCanvas.toDataURL('image/png'), 'PNG', singleX, topY, cardW, cardH);
+            } else if (side === 'back') {
+                var backCanvas = await captureCard(back);
+                pdf.addImage(backCanvas.toDataURL('image/png'), 'PNG', singleX, topY, cardW, cardH);
+            } else {
+                var frontBoth = await captureCard(front);
+                var backBoth = await captureCard(back);
+                pdf.addImage(frontBoth.toDataURL('image/png'), 'PNG', bothX, topY, cardW, cardH);
+                pdf.addImage(backBoth.toDataURL('image/png'), 'PNG', bothX + cardW + gap, topY, cardW, cardH);
+            }
+
+            pdf.save(buildFilename(side));
+        } catch (e) {
+            alert('PDF-Download fehlgeschlagen. Bitte erneut versuchen.');
+        }
     }
 
     // Init
     var state = load();
     applyToFields(state);
     renderAll(state);
-
-    window.addEventListener('afterprint', clearPrintMode);
 
     // Live updates: bei jeder Änderung Karte UND QR neu rendern
     Object.keys(f).forEach(function (k) {
@@ -398,14 +481,13 @@ include __DIR__ . '/header.php';
     });
 
     $('vkPrintAll').addEventListener('click', function () {
-        clearPrintMode();
-        window.print();
+        downloadPdf('both');
     });
     $('vkPrintFront').addEventListener('click', function () {
-        printOnly('front');
+        downloadPdf('front');
     });
     $('vkPrintBack').addEventListener('click', function () {
-        printOnly('back');
+        downloadPdf('back');
     });
 
     // Lokales Logo-Upload → DataURL
