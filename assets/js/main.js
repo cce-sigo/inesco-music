@@ -222,8 +222,14 @@
         guestbookForm.dataset.bound = '1';
 
         const gbStatus = guestbookForm.querySelector('.form-status');
+        const submitButton = guestbookForm.querySelector('button[type="submit"]');
+        let isSubmitting = false;
         guestbookForm.addEventListener('submit', async (e) => {
             e.preventDefault();
+            if (isSubmitting) return;
+
+            isSubmitting = true;
+            if (submitButton) submitButton.disabled = true;
             gbStatus.className = 'form-status';
             gbStatus.textContent = 'Wird gesendet …';
 
@@ -240,11 +246,18 @@
                     await refreshGuestbookSection(successMessage);
                 } else {
                     gbStatus.classList.add('err');
-                    gbStatus.textContent = data.error || 'Senden fehlgeschlagen.';
+                    if (res.status === 429 && Number.isInteger(data.retry_after) && data.retry_after > 0) {
+                        gbStatus.textContent = 'Bitte noch ' + data.retry_after + ' Sekunden warten.';
+                    } else {
+                        gbStatus.textContent = data.error || 'Senden fehlgeschlagen.';
+                    }
                 }
             } catch (err) {
                 gbStatus.classList.add('err');
                 gbStatus.textContent = 'Netzwerkfehler. Bitte später erneut versuchen.';
+            } finally {
+                isSubmitting = false;
+                if (submitButton) submitButton.disabled = false;
             }
         });
     };

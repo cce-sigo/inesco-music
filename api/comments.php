@@ -4,6 +4,7 @@ require_once __DIR__ . '/../includes/config.php';
 header('Content-Type: application/json; charset=UTF-8');
 
 $reviewingEnabled = comment_review_enabled();
+$rateLimitSeconds = 1;
 
 if (($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'POST') {
     http_response_code(405);
@@ -37,9 +38,16 @@ if ($tsForm > 0 && (time() - $tsForm) < 2) {
 
 // Rate-Limit pro Session
 $now = time();
-if (isset($_SESSION['gb_last']) && ($now - (int)$_SESSION['gb_last']) < 30) {
+if (isset($_SESSION['gb_last']) && ($now - (int)$_SESSION['gb_last']) < $rateLimitSeconds) {
+    $retryAfter = $rateLimitSeconds - ($now - (int)$_SESSION['gb_last']);
+    if ($retryAfter < 1) $retryAfter = 1;
+    header('Retry-After: ' . $retryAfter);
     http_response_code(429);
-    echo json_encode(['ok' => false, 'error' => 'Bitte kurz warten und erneut versuchen.']);
+    echo json_encode([
+        'ok' => false,
+        'error' => 'Bitte kurz warten und erneut versuchen.',
+        'retry_after' => $retryAfter,
+    ]);
     exit;
 }
 

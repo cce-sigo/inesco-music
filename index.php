@@ -387,21 +387,65 @@ include __DIR__ . '/includes/header.php';
         <?php if (empty($comments)): ?>
             <p class="muted">Noch keine Einträge – sei der Erste!</p>
         <?php else: ?>
+            <?php
+                $commentsByMonth = [];
+                $sortedComments = $comments;
+                $monthNames = [
+                    1 => 'Januar', 2 => 'Februar', 3 => 'März', 4 => 'April',
+                    5 => 'Mai', 6 => 'Juni', 7 => 'Juli', 8 => 'August',
+                    9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Dezember',
+                ];
+
+                usort($sortedComments, function (array $a, array $b): int {
+                    return (int)($b['ts'] ?? 0) <=> (int)($a['ts'] ?? 0);
+                });
+
+                foreach ($sortedComments as $cm) {
+                    $ts = (int)($cm['ts'] ?? 0);
+                    if ($ts <= 0) continue;
+                    $monthKey = date('Y-m', $ts);
+                    if (!isset($commentsByMonth[$monthKey])) {
+                        $monthNum = (int)date('n', $ts);
+                        $monthYear = (int)date('Y', $ts);
+                        $commentsByMonth[$monthKey] = [
+                            'label' => ($monthNames[$monthNum] ?? date('F', $ts)) . ' ' . $monthYear,
+                            'items' => [],
+                        ];
+                    }
+                    $commentsByMonth[$monthKey]['items'][] = $cm;
+                }
+
+                krsort($commentsByMonth, SORT_STRING);
+
+                $currentMonthKey = date('Y-m');
+                $firstMonthKey = array_key_first($commentsByMonth);
+                $openMonthKey = isset($commentsByMonth[$currentMonthKey]) ? $currentMonthKey : $firstMonthKey;
+            ?>
             <div class="gb-list">
-                <?php foreach (array_reverse($comments) as $cm): ?>
-                    <article class="gb-entry reveal">
-                        <header class="gb-entry-header">
-                            <strong class="gb-name"><?= e($cm['name']) ?></strong>
-                            <time class="gb-time muted"><?= e(date('d.m.Y', (int)($cm['ts'] ?? 0))) ?></time>
-                        </header>
-                        <p class="gb-msg"><?= nl2br(e($cm['message'])) ?></p>
-                        <?php if (!empty($cm['reply'])): ?>
-                            <div class="gb-reply">
-                                <span class="gb-reply-label">INESCO:</span>
-                                <p><?= nl2br(e($cm['reply'])) ?></p>
-                            </div>
-                        <?php endif; ?>
-                    </article>
+                <?php foreach ($commentsByMonth as $monthKey => $monthData): ?>
+                    <details class="gb-month"<?= $monthKey === $openMonthKey ? ' open' : '' ?>>
+                        <summary class="gb-month-summary">
+                            <span class="gb-month-title"><?= e($monthData['label']) ?></span>
+                            <span class="gb-month-count muted"><?= count($monthData['items']) ?> Einträge</span>
+                        </summary>
+                        <div class="gb-month-list">
+                            <?php foreach ($monthData['items'] as $cm): ?>
+                                <article class="gb-entry reveal">
+                                    <header class="gb-entry-header">
+                                        <strong class="gb-name"><?= e($cm['name']) ?></strong>
+                                        <time class="gb-time muted"><?= e(date('d.m.Y', (int)($cm['ts'] ?? 0))) ?></time>
+                                    </header>
+                                    <p class="gb-msg"><?= nl2br(e($cm['message'])) ?></p>
+                                    <?php if (!empty($cm['reply'])): ?>
+                                        <div class="gb-reply">
+                                            <span class="gb-reply-label">INESCO:</span>
+                                            <p><?= nl2br(e($cm['reply'])) ?></p>
+                                        </div>
+                                    <?php endif; ?>
+                                </article>
+                            <?php endforeach; ?>
+                        </div>
+                    </details>
                 <?php endforeach; ?>
             </div>
         <?php endif; ?>

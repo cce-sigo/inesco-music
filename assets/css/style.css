@@ -555,8 +555,49 @@ a.partner-name:hover { color: var(--gold); text-decoration: underline; }
 .gb-list {
     display: flex;
     flex-direction: column;
-    gap: 1.5rem;
+    gap: 1rem;
     margin-bottom: 3rem;
+}
+
+.gb-month {
+    border: 1px solid var(--line);
+    border-radius: var(--radius);
+    background: rgba(20,8,10,.35);
+    overflow: hidden;
+}
+
+.gb-month-summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .8rem;
+    padding: .85rem 1rem;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+    background: rgba(107,26,37,.15);
+}
+
+.gb-month-summary::-webkit-details-marker {
+    display: none;
+}
+
+.gb-month-title {
+    font-family: var(--serif);
+    color: var(--gold-soft);
+    font-size: 1.1rem;
+}
+
+.gb-month-count {
+    font-size: .85rem;
+    white-space: nowrap;
+}
+
+.gb-month-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    padding: 1rem;
 }
 
 .gb-entry {
