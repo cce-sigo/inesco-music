@@ -1175,6 +1175,11 @@ include __DIR__ . '/header.php';
             if (!insideLogoPopup && !logoEl) hideLogoPopup();
         }
     });
+    document.addEventListener('keydown', function (ev) {
+        if (ev.key !== 'Escape') return;
+        hideTextPopup();
+        hideLogoPopup();
+    });
 
     /* Logo overlay popup (double-click) */
     var logoPopup = document.getElementById('pkLogoPopup');
@@ -1222,6 +1227,15 @@ include __DIR__ . '/header.php';
         logoPopup.hidden = true;
         activeLogoCfg = null;
         activeLogoEl = null;
+    }
+
+    function closeEditPopups() {
+        hideTextPopup();
+        hideLogoPopup();
+    }
+
+    function restoreLastSavedState() {
+        window.location.reload();
     }
 
     function ensureImagePathOption(path) {
@@ -1300,8 +1314,12 @@ include __DIR__ . '/header.php';
         printLink.addEventListener('click', function (ev) {
             if (!isFormDirty()) return;
             ev.preventDefault();
+            closeEditPopups();
             var shouldSave = window.confirm('Es gibt ungespeicherte Aenderungen. Vor dem Drucken/PDF zuerst speichern?');
-            if (!shouldSave) return;
+            if (!shouldSave) {
+                restoreLastSavedState();
+                return;
+            }
             if (!formEl) return;
             try {
                 window.sessionStorage.setItem(printAfterSaveStorageKey, printLink.href);
@@ -1332,8 +1350,12 @@ include __DIR__ . '/header.php';
             if (targetUrl.href === window.location.href) return;
 
             ev.preventDefault();
+            closeEditPopups();
             var shouldSave = window.confirm('Es gibt ungespeicherte Aenderungen. Vor dem Wechsel zuerst speichern?');
-            if (!shouldSave) return;
+            if (!shouldSave) {
+                restoreLastSavedState();
+                return;
+            }
             if (!formEl) return;
 
             try {
@@ -1456,6 +1478,7 @@ include __DIR__ . '/header.php';
             if (ev.key === 'Escape') {
                 ev.preventDefault();
                 stopEdit(false);
+                hideTextPopup();
                 el.blur();
             }
         });
