@@ -25,7 +25,9 @@ include __DIR__ . '/header.php';
     <!-- ===== LINKS: Karten + Toolbar ===== -->
     <div class="vk-preview">
         <div class="vk-toolbar">
-            <button type="button" class="btn" onclick="window.print()">Drucken / PDF speichern</button>
+            <button type="button" class="btn" id="vkPrintAll">Beide Seiten drucken / PDF</button>
+            <button type="button" class="btn btn-outline" id="vkPrintFront">Vorderseite als PDF</button>
+            <button type="button" class="btn btn-outline" id="vkPrintBack">Rückseite als PDF</button>
             <button type="button" class="btn btn-outline" id="vkRefresh">QR aktualisieren</button>
             <button type="button" class="btn btn-outline" id="vkReset">Zurücksetzen</button>
         </div>
@@ -230,6 +232,12 @@ include __DIR__ . '/header.php';
             print-color-adjust: exact;
             color-adjust: exact;
         }
+        html[data-vk-print="front"] .vk-card.back {
+            display: none !important;
+        }
+        html[data-vk-print="back"] #vkFront {
+            display: none !important;
+        }
     }
 </style>
 
@@ -354,11 +362,20 @@ include __DIR__ . '/header.php';
         });
     }
     function renderAll(s) { applyToCard(s); renderQr(s); }
+    function clearPrintMode() {
+        document.documentElement.removeAttribute('data-vk-print');
+    }
+    function printOnly(side) {
+        document.documentElement.setAttribute('data-vk-print', side);
+        window.print();
+    }
 
     // Init
     var state = load();
     applyToFields(state);
     renderAll(state);
+
+    window.addEventListener('afterprint', clearPrintMode);
 
     // Live updates: bei jeder Änderung Karte UND QR neu rendern
     Object.keys(f).forEach(function (k) {
@@ -378,6 +395,17 @@ include __DIR__ . '/header.php';
         if (!confirm('Alle Felder auf Standardwerte zurücksetzen?')) return;
         state = Object.assign({}, DEFAULTS);
         applyToFields(state); renderAll(state); save(state);
+    });
+
+    $('vkPrintAll').addEventListener('click', function () {
+        clearPrintMode();
+        window.print();
+    });
+    $('vkPrintFront').addEventListener('click', function () {
+        printOnly('front');
+    });
+    $('vkPrintBack').addEventListener('click', function () {
+        printOnly('back');
     });
 
     // Lokales Logo-Upload → DataURL
