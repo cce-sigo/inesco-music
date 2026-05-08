@@ -420,20 +420,29 @@ include __DIR__ . '/header.php';
 
 /* ===== Layout ===== */
 .pk-layout {
-    display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(360px, 44%);
+    display: flex;
+    flex-wrap: nowrap;
     gap: 24px;
     align-items: start;
 }
-.pk-preview-wrap { min-width: 0; overflow-x: auto; overflow-y: visible; }
+.pk-preview-wrap {
+    flex: 0 0 clamp(320px, 36vw, 520px);
+    width: clamp(320px, 36vw, 520px);
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: visible;
+}
 #pkScaler { width: 100%; }
 
 /* Editor: sticky, scrollable */
 .pk-editor {
+    flex: 1 1 0;
+    min-width: 300px;
     position: sticky;
     top: 16px;
     max-height: calc(100vh - 32px);
     overflow-y: auto;
+    overflow-x: hidden;
     background: rgba(0,0,0,.25);
     border: 1px solid rgba(212,168,90,.25);
     border-radius: 8px;
@@ -452,15 +461,9 @@ include __DIR__ . '/header.php';
 /* Cards: 2 → 3 columns based on editor width */
 .pk-editor-cards {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr));
     gap: 12px;
     align-items: start;
-}
-@container pk-editor (min-width: 600px) {
-    .pk-editor-cards { grid-template-columns: repeat(3, 1fr); }
-}
-@container pk-editor (min-width: 840px) {
-    .pk-editor-cards { grid-template-columns: repeat(4, 1fr); }
 }
 
 .pk-editor fieldset {
@@ -469,6 +472,7 @@ include __DIR__ . '/header.php';
     padding: 12px 14px;
     background: rgba(0,0,0,.35);
     margin: 0;
+    min-width: 0;
 }
 .pk-editor legend { padding: 0 .35rem; font-weight: 700; color: #f0c878; font-size: .95rem; }
 .pk-editor label { display: block; margin: .35rem 0; font-size: .85rem; }
@@ -496,7 +500,11 @@ include __DIR__ . '/header.php';
 .pk-editor .btn { align-self: flex-start; }
 
 @media (max-width: 1000px) {
-    .pk-layout { grid-template-columns: 1fr; }
+    .pk-layout { flex-direction: column; }
+    .pk-preview-wrap {
+        flex-basis: auto;
+        width: min(100%, 520px);
+    }
     .pk-editor { position: static; max-height: none; }
 }
 
@@ -743,12 +751,60 @@ include __DIR__ . '/header.php';
     /* Zoom slider */
     var zoomSlider = document.getElementById('pkZoomSlider');
     var zoomLabel  = document.getElementById('pkZoomLabel');
+    var layout     = document.querySelector('.pk-layout');
+    var previewWrap = document.getElementById('pkPreviewWrap');
     var scaler     = document.getElementById('pkScaler');
+    function getBasePreviewWidth() {
+        if (!previewWrap) return 0;
+        var prevBasis = previewWrap.style.flexBasis;
+        var prevWidth = previewWrap.style.width;
+        previewWrap.style.flexBasis = '';
+        previewWrap.style.width = '';
+        var width = previewWrap.getBoundingClientRect().width || 0;
+        previewWrap.style.flexBasis = prevBasis;
+        previewWrap.style.width = prevWidth;
+        return width;
+    }
+
+    function updateZoomLayout() {
+        if (!zoomSlider || !scaler) return;
+
+        var zoom = parseInt(zoomSlider.value, 10) || 100;
+        if (zoomLabel) zoomLabel.textContent = zoom + '%';
+
+        if (!layout || !previewWrap || window.matchMedia('(max-width: 1000px)').matches) {
+            if (previewWrap) {
+                previewWrap.style.flexBasis = '';
+                previewWrap.style.width = '';
+            }
+            scaler.style.width = zoom + '%';
+            return;
+        }
+
+        var basePreviewWidth = getBasePreviewWidth();
+        if (!basePreviewWidth) {
+            scaler.style.width = zoom + '%';
+            return;
+        }
+
+        var layoutWidth = layout.getBoundingClientRect().width || 0;
+        var layoutStyle = window.getComputedStyle(layout);
+        var gap = parseFloat(layoutStyle.columnGap || layoutStyle.gap || '24') || 24;
+        var editorMinWidth = 300;
+        var maxPreviewWidth = Math.max(basePreviewWidth, layoutWidth - gap - editorMinWidth);
+        var desiredPreviewWidth = basePreviewWidth * (zoom / 100);
+        var previewWidth = Math.min(desiredPreviewWidth, maxPreviewWidth);
+        var internalZoom = previewWidth > 0 ? (desiredPreviewWidth / previewWidth) * 100 : zoom;
+
+        previewWrap.style.flexBasis = previewWidth + 'px';
+        previewWrap.style.width = previewWidth + 'px';
+        scaler.style.width = internalZoom + '%';
+    }
+
     if (zoomSlider && scaler) {
-        zoomSlider.addEventListener('input', function () {
-            scaler.style.width = zoomSlider.value + '%';
-            if (zoomLabel) zoomLabel.textContent = zoomSlider.value + '%';
-        });
+        zoomSlider.addEventListener('input', updateZoomLayout);
+        window.addEventListener('resize', updateZoomLayout);
+        updateZoomLayout();
     }
 
     /* cqw polyfill: use container-type on canvas */
