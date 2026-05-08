@@ -400,7 +400,8 @@ include __DIR__ . '/header.php';
     async function captureCard(el) {
         await waitForImages(el);
         return await html2canvas(el, {
-            scale: 3,
+            // 85mm at 300 DPI needs ~1004 px width; scale 4 provides headroom.
+            scale: 4,
             useCORS: true,
             allowTaint: true,
             backgroundColor: null,

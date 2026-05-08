@@ -144,7 +144,7 @@ $d     = array_merge($defaults, $saved);
         .pk-venue-logo { margin-top: 1cqw; max-width: 45%; max-height: 8cqw; object-fit: contain; }
 
         /* Print – single page, canvas fills exactly the page */
-        @page { size: A3 portrait; margin: 0; }
+        @page { size: A4 portrait; margin: 0; }
         @media print {
             html, body {
                 width: 100%; height: 100%;

@@ -931,7 +931,7 @@ include __DIR__ . '/header.php';
 }
 
 /* Print */
-@page { size: A3 portrait; margin: 0; }
+@page { size: A4 portrait; margin: 0; }
 @media print {
     html, body, .admin-main { background: #fff !important; }
     .admin-header, .admin-footer, .pk-topbar, .pk-editor { display: none !important; }
