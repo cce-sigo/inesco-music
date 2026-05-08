@@ -189,6 +189,7 @@ function nav_defaults(): array {
         ['id' => 'konzerte',     'label' => 'Konzerte',          'visible' => true],
         ['id' => 'kontakt',      'label' => 'Kontakt',           'visible' => true],
         ['id' => 'partner',      'label' => 'Freunde & Sponsoren', 'visible' => true],
+        ['id' => 'gaestebuch',   'label' => 'Gästebuch',         'visible' => true],
     ];
 }
 
@@ -240,6 +241,18 @@ function nav_is_visible(string $id): bool {
         if ($it['id'] === $id) return !empty($it['visible']);
     }
     return true;
+}
+
+/**
+ * Prüft, ob neue Gästebuch-Einträge zunächst geprüft werden müssen.
+ * Default ist aktiv, damit bestehende Installationen sicher bleiben.
+ */
+function comment_review_enabled(): bool {
+    $content = read_json('content');
+    if (!isset($content['comments']) || !is_array($content['comments'])) {
+        return true;
+    }
+    return !array_key_exists('reviewing', $content['comments']) || !empty($content['comments']['reviewing']);
 }
 
 /**

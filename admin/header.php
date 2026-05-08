@@ -28,6 +28,7 @@
             <a href="<?= e(url('admin/contact.php')) ?>">Kontakt</a>
             <a href="<?= e(url('admin/visitenkarte.php')) ?>">Visitenkarte</a>
             <a href="<?= e(url('admin/plakat.php')) ?>">Plakat</a>
+            <a href="<?= e(url('admin/comments.php')) ?>">Gästebuch</a>
             <a class="logout" href="<?= e(url('admin/logout.php')) ?>">Logout (<?= e($_SESSION['admin_user'] ?? '') ?>)</a>
         </nav>
     </div>

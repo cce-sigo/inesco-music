@@ -123,6 +123,8 @@ a:hover { text-decoration: underline; }
 .btn-primary:hover { background: #a52a3a; text-decoration: none; }
 .btn-ghost { display: inline-block; padding: .6rem 1.2rem; border: 1px solid var(--line); border-radius: 6px; color: var(--muted); margin-left: .5rem; }
 .btn-ghost:hover { color: var(--text); border-color: var(--gold); text-decoration: none; }
+.btn-danger, button.btn-danger { display: inline-block; cursor: pointer; background: #7a1a1a; color: #fff; padding: .6rem 1.2rem; border: 1px solid #c0392b; border-radius: 6px; font-weight: 600; letter-spacing: .05em; text-transform: uppercase; font-size: .85rem; transition: background .2s; }
+.btn-danger:hover { background: #c0392b; }
 
 .link-danger {
     background: none; border: 0; color: var(--danger); cursor: pointer; padding: 0; margin-left: .5rem; font-weight: 600;

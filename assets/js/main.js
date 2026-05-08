@@ -188,4 +188,67 @@
             }
         });
     }
+
+    const refreshGuestbookSection = async (message) => {
+        const currentSection = document.getElementById('gaestebuch');
+        if (!currentSection) return;
+
+        const res = await fetch(window.location.pathname + window.location.search, {
+            headers: { 'X-Requested-With': 'fetch' }
+        });
+        if (!res.ok) throw new Error('refresh_failed');
+
+        const html = await res.text();
+        const doc = new DOMParser().parseFromString(html, 'text/html');
+        const nextSection = doc.getElementById('gaestebuch');
+        if (!nextSection) throw new Error('section_missing');
+
+        currentSection.replaceWith(nextSection);
+        nextSection.querySelectorAll('.reveal').forEach(el => el.classList.add('in'));
+
+        const nextForm = nextSection.querySelector('#gbForm');
+        if (nextForm) {
+            const nextStatus = nextForm.querySelector('.form-status');
+            if (nextStatus) {
+                nextStatus.className = 'form-status ok';
+                nextStatus.textContent = message;
+            }
+            bindGuestbookForm(nextForm);
+        }
+    };
+
+    const bindGuestbookForm = (guestbookForm) => {
+        if (!guestbookForm || guestbookForm.dataset.bound === '1') return;
+        guestbookForm.dataset.bound = '1';
+
+        const gbStatus = guestbookForm.querySelector('.form-status');
+        guestbookForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            gbStatus.className = 'form-status';
+            gbStatus.textContent = 'Wird gesendet …';
+
+            try {
+                const res = await fetch(guestbookForm.action, {
+                    method: 'POST',
+                    body: new FormData(guestbookForm),
+                    headers: { 'Accept': 'application/json' }
+                });
+                const data = await res.json().catch(() => ({}));
+                if (res.ok && data.ok) {
+                    const successMessage = data.message || 'Danke! Dein Eintrag wird nach Prüfung sichtbar.';
+                    guestbookForm.reset();
+                    await refreshGuestbookSection(successMessage);
+                } else {
+                    gbStatus.classList.add('err');
+                    gbStatus.textContent = data.error || 'Senden fehlgeschlagen.';
+                }
+            } catch (err) {
+                gbStatus.classList.add('err');
+                gbStatus.textContent = 'Netzwerkfehler. Bitte später erneut versuchen.';
+            }
+        });
+    };
+
+    // Gästebuch-Formular per Fetch
+    bindGuestbookForm(document.getElementById('gbForm'));
 })();

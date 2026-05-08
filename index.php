@@ -9,6 +9,7 @@ $concerts = sort_concerts(read_json('concerts'));
 $impressions = read_json('impressions');
 $sponsors = read_json('sponsors');
 $contact  = read_json('contact');
+$comments = array_values(array_filter(read_json('comments'), fn($c) => !empty($c['approved'])));
 
 // Hero-Bilder vorbereiten (vor Header, damit Preload möglich ist)
 $heroMode     = $content['hero']['mode']     ?? 'slideshow'; // slideshow|random|static
@@ -373,6 +374,59 @@ include __DIR__ . '/includes/header.php';
         <?php if (empty($partner_freunde) && empty($partner_sponsoren)): ?>
             <p class="muted">Bald stellen wir hier unsere Partner vor.</p>
         <?php endif; ?>
+    </div>
+</section>
+<?php endif; ?>
+
+<?php if (nav_is_visible('gaestebuch')): ?>
+<!-- GÄSTEBUCH -->
+<section class="section section-gaestebuch" id="gaestebuch">
+    <div class="container">
+        <h2 class="section-title">Gästebuch</h2>
+
+        <?php if (empty($comments)): ?>
+            <p class="muted">Noch keine Einträge – sei der Erste!</p>
+        <?php else: ?>
+            <div class="gb-list">
+                <?php foreach (array_reverse($comments) as $cm): ?>
+                    <article class="gb-entry reveal">
+                        <header class="gb-entry-header">
+                            <strong class="gb-name"><?= e($cm['name']) ?></strong>
+                            <time class="gb-time muted"><?= e(date('d.m.Y', (int)($cm['ts'] ?? 0))) ?></time>
+                        </header>
+                        <p class="gb-msg"><?= nl2br(e($cm['message'])) ?></p>
+                        <?php if (!empty($cm['reply'])): ?>
+                            <div class="gb-reply">
+                                <span class="gb-reply-label">INESCO:</span>
+                                <p><?= nl2br(e($cm['reply'])) ?></p>
+                            </div>
+                        <?php endif; ?>
+                    </article>
+                <?php endforeach; ?>
+            </div>
+        <?php endif; ?>
+
+        <div class="gb-form-wrap">
+            <h3>Eintrag hinterlassen</h3>
+            <form class="gb-form contact-form" id="gbForm"
+                  action="<?= e(url('api/comments.php')) ?>" method="post" novalidate>
+                <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+                <input type="hidden" name="ts"   value="<?= time() ?>">
+                <div class="hp" aria-hidden="true">
+                    <label>Website (bitte freilassen)
+                        <input type="text" name="website" tabindex="-1" autocomplete="off" value="">
+                    </label>
+                </div>
+                <label>Name
+                    <input type="text" name="name" required maxlength="100">
+                </label>
+                <label>Nachricht
+                    <textarea name="message" rows="4" required maxlength="1000"></textarea>
+                </label>
+                <button type="submit" class="btn btn-primary">Eintrag absenden</button>
+                <p class="form-status" role="status" aria-live="polite"></p>
+            </form>
+        </div>
     </div>
 </section>
 <?php endif; ?>
