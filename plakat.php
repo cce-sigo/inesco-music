@@ -16,34 +16,61 @@ $defaults = [
     'circle_top'        => '33',
     'circle_left'       => '17',
     'weekday_size'      => '2.5',
+    'weekday_weight'    => 'bold',
+    'weekday_visible'   => '1',
     'date_size'         => '2.8',
+    'date_weight'       => 'bold',
+    'date_visible'      => '1',
     'time_size'         => '2.5',
+    'time_weight'       => 'bold',
+    'time_visible'      => '1',
     'circle_font'       => 'Arial, Helvetica, sans-serif',
+    'circle_align'      => 'center',
     // Layout & Schrift – Veranstaltungsort
     'venue_top'         => '48',
     'venue_right'       => '3',
     'venue_l1_size'     => '1.9',
+    'venue_l1_weight'   => 'bold',
+    'venue_l1_visible'  => '1',
     'venue_l2_size'     => '1.7',
+    'venue_l2_weight'   => 'normal',
+    'venue_l2_visible'  => '1',
     'venue_font'        => 'Arial, Helvetica, sans-serif',
+    'venue_align'       => 'center',
     // Layout & Schrift – Partner
     'partner_top'       => '13',
     'partner_left'      => '2',
     'partner_name_size' => '1.8',
+    'partner_name_weight' => 'bold',
+    'partner_name_visible' => '1',
     'partner_sub_size'  => '1.6',
+    'partner_sub_weight' => 'normal',
+    'partner_sub_visible' => '1',
     'partner_font'      => 'Arial, Helvetica, sans-serif',
+    'partner_align'     => 'center',
     // Layout & Schrift – Event-Untertitel
     'eventsub_top'      => '20',
     'eventsub_left'     => '30',
     'eventsub_size'     => '1.7',
+    'eventsub_weight'   => 'bold',
+    'eventsub_visible'  => '1',
     'eventsub_font'     => 'Arial, Helvetica, sans-serif',
+    'eventsub_align'    => 'center',
     // Partner-Logo (eigenständig)
     'partner_logo_top'   => '5',
     'partner_logo_left'  => '2',
     'partner_logo_width' => '20',
+    'partner_logo_visible' => '1',
     // Venue-Logo (eigenständig)
     'venue_logo_top'     => '70',
     'venue_logo_right'   => '3',
     'venue_logo_width'   => '15',
+    'venue_logo_visible' => '1',
+    // Text-Overlay-Breiten
+    'circle_width'   => '28',
+    'venue_width'    => '36',
+    'partner_width'  => '28',
+    'eventsub_width' => '38',
 ];
 
 $saved = read_json('plakat', $defaults);
@@ -169,44 +196,54 @@ $d     = array_merge($defaults, $saved);
 <div class="pk-canvas">
     <img class="pk-bg" src="<?= e(url('images/Plakat-INESCO_neutral.png')) ?>" alt="Plakat">
 
-    <?php if ($d['partner_logo']): ?>
+    <?php if ($d['partner_logo'] && $d['partner_logo_visible'] !== '0'): ?>
     <div class="pk-overlay" style="top:<?= e($d['partner_logo_top']) ?>%;left:<?= e($d['partner_logo_left']) ?>%;width:<?= e($d['partner_logo_width']) ?>%">
         <img style="display:block;width:100%;height:auto;object-fit:contain"
              src="<?= e(url($d['partner_logo'])) ?>" alt="<?= e($d['partner_name']) ?>">
     </div>
     <?php endif; ?>
-    <?php if ($d['partner_name'] || $d['partner_subtitle']): ?>
+    <?php if (($d['partner_name'] && $d['partner_name_visible'] !== '0') || ($d['partner_subtitle'] && $d['partner_sub_visible'] !== '0')): ?>
     <div class="pk-overlay pk-partner"
-         style="top:<?= e($d['partner_top']) ?>%;left:<?= e($d['partner_left']) ?>%;font-family:<?= e($d['partner_font']) ?>">
+         style="top:<?= e($d['partner_top']) ?>%;left:<?= e($d['partner_left']) ?>%;width:<?= e($d['partner_width']) ?>%;font-family:<?= e($d['partner_font']) ?>;text-align:<?= e($d['partner_align']) ?>;align-items:<?= e($d['partner_align'] === 'left' ? 'flex-start' : ($d['partner_align'] === 'right' ? 'flex-end' : 'center')) ?>">
         <div class="pk-partner-text">
-            <?php if ($d['partner_name']): ?>
-                <span class="pk-partner-name" style="font-size:<?= e($d['partner_name_size']) ?>cqw"><?= e($d['partner_name']) ?></span>
+            <?php if ($d['partner_name'] && $d['partner_name_visible'] !== '0'): ?>
+                <span class="pk-partner-name" style="font-size:<?= e($d['partner_name_size']) ?>cqw;font-weight:<?= e($d['partner_name_weight']) ?>"><?= e($d['partner_name']) ?></span>
             <?php endif; ?>
-            <?php if ($d['partner_subtitle']): ?>
-                <span class="pk-partner-sub" style="font-size:<?= e($d['partner_sub_size']) ?>cqw"><?= e($d['partner_subtitle']) ?></span>
+            <?php if ($d['partner_subtitle'] && $d['partner_sub_visible'] !== '0'): ?>
+                <span class="pk-partner-sub" style="font-size:<?= e($d['partner_sub_size']) ?>cqw;font-weight:<?= e($d['partner_sub_weight']) ?>"><?= e($d['partner_subtitle']) ?></span>
             <?php endif; ?>
         </div>
     </div>
     <?php endif; ?>
 
-    <?php if ($d['event_subtitle']): ?>
+    <?php if ($d['event_subtitle'] && $d['eventsub_visible'] !== '0'): ?>
     <div class="pk-overlay pk-eventsub"
-         style="top:<?= e($d['eventsub_top']) ?>%;left:<?= e($d['eventsub_left']) ?>%;font-size:<?= e($d['eventsub_size']) ?>cqw;font-family:<?= e($d['eventsub_font']) ?>"><?= e($d['event_subtitle']) ?></div>
+         style="top:<?= e($d['eventsub_top']) ?>%;left:<?= e($d['eventsub_left']) ?>%;width:<?= e($d['eventsub_width']) ?>%;font-size:<?= e($d['eventsub_size']) ?>cqw;font-weight:<?= e($d['eventsub_weight']) ?>;font-family:<?= e($d['eventsub_font']) ?>;text-align:<?= e($d['eventsub_align']) ?>"><?= e($d['event_subtitle']) ?></div>
     <?php endif; ?>
 
     <div class="pk-overlay pk-circle"
-         style="top:<?= e($d['circle_top']) ?>%;left:<?= e($d['circle_left']) ?>%;font-family:<?= e($d['circle_font']) ?>">
-        <span class="pk-weekday" style="font-size:<?= e($d['weekday_size']) ?>cqw"><?= e($d['weekday']) ?></span>
-        <span class="pk-date"    style="font-size:<?= e($d['date_size']) ?>cqw"><?= e($d['date']) ?></span>
-        <span class="pk-time"    style="font-size:<?= e($d['time_size']) ?>cqw"><?= e($d['time']) ?></span>
+         style="top:<?= e($d['circle_top']) ?>%;left:<?= e($d['circle_left']) ?>%;width:<?= e($d['circle_width']) ?>%;font-family:<?= e($d['circle_font']) ?>;text-align:<?= e($d['circle_align']) ?>;align-items:<?= e($d['circle_align'] === 'left' ? 'flex-start' : ($d['circle_align'] === 'right' ? 'flex-end' : 'center')) ?>">
+        <?php if ($d['weekday_visible'] !== '0'): ?>
+        <span class="pk-weekday" style="font-size:<?= e($d['weekday_size']) ?>cqw;font-weight:<?= e($d['weekday_weight']) ?>"><?= e($d['weekday']) ?></span>
+        <?php endif; ?>
+        <?php if ($d['date_visible'] !== '0'): ?>
+        <span class="pk-date"    style="font-size:<?= e($d['date_size']) ?>cqw;font-weight:<?= e($d['date_weight']) ?>"><?= e($d['date']) ?></span>
+        <?php endif; ?>
+        <?php if ($d['time_visible'] !== '0'): ?>
+        <span class="pk-time"    style="font-size:<?= e($d['time_size']) ?>cqw;font-weight:<?= e($d['time_weight']) ?>"><?= e($d['time']) ?></span>
+        <?php endif; ?>
     </div>
 
     <div class="pk-overlay pk-venue"
-         style="top:<?= e($d['venue_top']) ?>%;right:<?= e($d['venue_right']) ?>%;font-family:<?= e($d['venue_font']) ?>">
-        <span class="pk-venue-l1" style="font-size:<?= e($d['venue_l1_size']) ?>cqw"><?= e($d['venue_line1']) ?></span>
-        <span class="pk-venue-l2" style="font-size:<?= e($d['venue_l2_size']) ?>cqw"><?= e($d['venue_line2']) ?></span>
+         style="top:<?= e($d['venue_top']) ?>%;right:<?= e($d['venue_right']) ?>%;width:<?= e($d['venue_width']) ?>%;font-family:<?= e($d['venue_font']) ?>;text-align:<?= e($d['venue_align']) ?>;align-items:<?= e($d['venue_align'] === 'left' ? 'flex-start' : ($d['venue_align'] === 'right' ? 'flex-end' : 'center')) ?>">
+        <?php if ($d['venue_l1_visible'] !== '0'): ?>
+        <span class="pk-venue-l1" style="font-size:<?= e($d['venue_l1_size']) ?>cqw;font-weight:<?= e($d['venue_l1_weight']) ?>"><?= e($d['venue_line1']) ?></span>
+        <?php endif; ?>
+        <?php if ($d['venue_l2_visible'] !== '0'): ?>
+        <span class="pk-venue-l2" style="font-size:<?= e($d['venue_l2_size']) ?>cqw;font-weight:<?= e($d['venue_l2_weight']) ?>"><?= e($d['venue_line2']) ?></span>
+        <?php endif; ?>
     </div>
-    <?php if ($d['venue_logo']): ?>
+    <?php if ($d['venue_logo'] && $d['venue_logo_visible'] !== '0'): ?>
     <div class="pk-overlay" style="top:<?= e($d['venue_logo_top']) ?>%;right:<?= e($d['venue_logo_right']) ?>%;width:<?= e($d['venue_logo_width']) ?>%">
         <img style="display:block;width:100%;height:auto;object-fit:contain"
              src="<?= e(url($d['venue_logo'])) ?>" alt="<?= e($d['venue_line1']) ?>">

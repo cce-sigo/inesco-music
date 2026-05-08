@@ -17,38 +17,100 @@ $defaults = [
     'circle_top'        => '33',
     'circle_left'       => '17',
     'weekday_size'      => '2.5',
+    'weekday_weight'    => 'bold',
+    'weekday_visible'   => '1',
     'date_size'         => '2.8',
+    'date_weight'       => 'bold',
+    'date_visible'      => '1',
     'time_size'         => '2.5',
+    'time_weight'       => 'bold',
+    'time_visible'      => '1',
     'circle_font'       => 'Arial, Helvetica, sans-serif',
+    'circle_align'      => 'center',
     // Layout & Schrift – Veranstaltungsort
     'venue_top'         => '48',
     'venue_right'       => '3',
     'venue_l1_size'     => '1.9',
+    'venue_l1_weight'   => 'bold',
+    'venue_l1_visible'  => '1',
     'venue_l2_size'     => '1.7',
+    'venue_l2_weight'   => 'normal',
+    'venue_l2_visible'  => '1',
     'venue_font'        => 'Arial, Helvetica, sans-serif',
+    'venue_align'       => 'center',
     // Layout & Schrift – Partner
     'partner_top'       => '13',
     'partner_left'      => '2',
     'partner_name_size' => '1.8',
+    'partner_name_weight' => 'bold',
+    'partner_name_visible' => '1',
     'partner_sub_size'  => '1.6',
+    'partner_sub_weight' => 'normal',
+    'partner_sub_visible' => '1',
     'partner_font'      => 'Arial, Helvetica, sans-serif',
+    'partner_align'     => 'center',
     // Layout & Schrift – Event-Untertitel
     'eventsub_top'      => '20',
     'eventsub_left'     => '30',
     'eventsub_size'     => '1.7',
+    'eventsub_weight'   => 'bold',
+    'eventsub_visible'  => '1',
     'eventsub_font'     => 'Arial, Helvetica, sans-serif',
+    'eventsub_align'    => 'center',
     // Partner-Logo (eigenständig)
     'partner_logo_top'   => '5',
     'partner_logo_left'  => '2',
     'partner_logo_width' => '20',
+    'partner_logo_visible' => '1',
     // Venue-Logo (eigenständig)
     'venue_logo_top'     => '70',
     'venue_logo_right'   => '3',
     'venue_logo_width'   => '15',
+    'venue_logo_visible' => '1',
+    // Text-Overlay-Breiten
+    'circle_width'   => '28',
+    'venue_width'    => '36',
+    'partner_width'  => '28',
+    'eventsub_width' => '38',
 ];
 
 $saved = read_json('plakat', $defaults);
 $data  = array_merge($defaults, $saved);
+
+function collect_image_choices(array $relativeDirs): array {
+    $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'avif'];
+    $items = [];
+
+    foreach ($relativeDirs as $dir) {
+        $abs = realpath(__DIR__ . '/../' . $dir);
+        if (!$abs || !is_dir($abs)) {
+            continue;
+        }
+
+        $it = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($abs, FilesystemIterator::SKIP_DOTS)
+        );
+
+        foreach ($it as $fileInfo) {
+            if (!$fileInfo->isFile()) {
+                continue;
+            }
+            $ext = strtolower((string)pathinfo($fileInfo->getFilename(), PATHINFO_EXTENSION));
+            if (!in_array($ext, $allowed, true)) {
+                continue;
+            }
+
+            $full = str_replace('\\', '/', $fileInfo->getPathname());
+            $base = str_replace('\\', '/', rtrim($abs, '\\/'));
+            $rel = ltrim(substr($full, strlen($base)), '/');
+            $items[] = rtrim($dir, '/\\') . '/' . $rel;
+        }
+    }
+
+    $items = array_values(array_unique($items));
+    sort($items, SORT_NATURAL | SORT_FLAG_CASE);
+    return $items;
+}
 
 /* ---------- POST: Speichern ---------- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -68,6 +130,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect(url('admin/plakat.php'));
 }
 
+$imageChoices = collect_image_choices(['assets/img/uploadlogos']);
+
 include __DIR__ . '/header.php';
 ?>
 <div class="pk-topbar">
@@ -76,9 +140,10 @@ include __DIR__ . '/header.php';
     <div class="pk-topbar-right">
         <label class="pk-zoom-ctrl">
             <span id="pkZoomLabel">100%</span>
-            <input type="range" id="pkZoomSlider" min="30" max="200" step="2" value="100">
+            <input type="range" id="pkZoomSlider" min="30" max="200" step="10" value="100">
         </label>
-        <a class="btn" href="<?= e(url('plakat.php')) ?>" target="_blank">Drucken&nbsp;/ PDF</a>
+        <button type="submit" class="btn" form="pkForm">Speichern</button>
+        <a class="btn" id="pkPrintLink" href="<?= e(url('plakat.php')) ?>" target="_blank">Drucken&nbsp;/ PDF</a>
     </div>
 </div>
 
@@ -93,7 +158,7 @@ include __DIR__ . '/header.php';
             <img class="pk-bg" src="<?= e(url('images/Plakat-INESCO_neutral.png')) ?>" alt="Plakat Hintergrund">
 
             <!-- Partner-Logo (eigenständig positioniert) -->
-            <div class="pk-overlay" id="pkPartnerLogoWrap"
+            <div class="pk-overlay pk-logo-overlay<?= $data['partner_logo_visible'] === '0' ? ' pk-text-hidden' : '' ?>" id="pkPartnerLogoWrap"
                  style="top:<?= e($data['partner_logo_top']) ?>%;left:<?= e($data['partner_logo_left']) ?>%;width:<?= e($data['partner_logo_width']) ?>%">
                 <img class="pk-img-free" id="pkPartnerLogo"
                      src="<?= e($data['partner_logo'] ? url($data['partner_logo']) : '') ?>"
@@ -103,34 +168,34 @@ include __DIR__ . '/header.php';
 
             <!-- Partner-Text -->
             <div class="pk-overlay pk-partner" id="pkPartnerArea"
-                 style="top:<?= e($data['partner_top']) ?>%;left:<?= e($data['partner_left']) ?>%;font-family:<?= e($data['partner_font']) ?>">
+                  style="top:<?= e($data['partner_top']) ?>%;left:<?= e($data['partner_left']) ?>%;width:<?= e($data['partner_width']) ?>%;font-family:<?= e($data['partner_font']) ?>;text-align:<?= e($data['partner_align']) ?>;align-items:<?= e($data['partner_align'] === 'left' ? 'flex-start' : ($data['partner_align'] === 'right' ? 'flex-end' : 'center')) ?>">
                 <div class="pk-partner-text">
-                    <span class="pk-partner-name" id="pkPartnerName" style="font-size:<?= e($data['partner_name_size']) ?>cqw"><?= e($data['partner_name']) ?></span>
-                    <span class="pk-partner-sub"  id="pkPartnerSub"  style="font-size:<?= e($data['partner_sub_size']) ?>cqw"><?= e($data['partner_subtitle']) ?></span>
+                    <span class="pk-partner-name<?= $data['partner_name_visible'] === '0' ? ' pk-text-hidden' : '' ?>" id="pkPartnerName" style="font-size:<?= e($data['partner_name_size']) ?>cqw;font-weight:<?= e($data['partner_name_weight']) ?>"><?= e($data['partner_name']) ?></span>
+                    <span class="pk-partner-sub<?= $data['partner_sub_visible'] === '0' ? ' pk-text-hidden' : '' ?>"  id="pkPartnerSub"  style="font-size:<?= e($data['partner_sub_size']) ?>cqw;font-weight:<?= e($data['partner_sub_weight']) ?>"><?= e($data['partner_subtitle']) ?></span>
                 </div>
             </div>
 
             <!-- Event-Untertitel (oben mitte) -->
-            <div class="pk-overlay pk-eventsub" id="pkEventSub"
-                 style="top:<?= e($data['eventsub_top']) ?>%;left:<?= e($data['eventsub_left']) ?>%;font-size:<?= e($data['eventsub_size']) ?>cqw;font-family:<?= e($data['eventsub_font']) ?>"><?= e($data['event_subtitle']) ?></div>
+            <div class="pk-overlay pk-eventsub<?= $data['eventsub_visible'] === '0' ? ' pk-text-hidden' : '' ?>" id="pkEventSub"
+                                    style="top:<?= e($data['eventsub_top']) ?>%;left:<?= e($data['eventsub_left']) ?>%;width:<?= e($data['eventsub_width']) ?>%;font-size:<?= e($data['eventsub_size']) ?>cqw;font-weight:<?= e($data['eventsub_weight']) ?>;font-family:<?= e($data['eventsub_font']) ?>;text-align:<?= e($data['eventsub_align']) ?>"><?= e($data['event_subtitle']) ?></div>
 
             <!-- Weißer Kreis: Datum/Uhrzeit -->
             <div class="pk-overlay pk-circle" id="pkCircle"
-                 style="top:<?= e($data['circle_top']) ?>%;left:<?= e($data['circle_left']) ?>%;font-family:<?= e($data['circle_font']) ?>">
-                <span class="pk-weekday" id="pkWeekday" style="font-size:<?= e($data['weekday_size']) ?>cqw"><?= e($data['weekday']) ?></span>
-                <span class="pk-date"    id="pkDate"    style="font-size:<?= e($data['date_size']) ?>cqw"><?= e($data['date']) ?></span>
-                <span class="pk-time"    id="pkTime"    style="font-size:<?= e($data['time_size']) ?>cqw"><?= e($data['time']) ?></span>
+                  style="top:<?= e($data['circle_top']) ?>%;left:<?= e($data['circle_left']) ?>%;width:<?= e($data['circle_width']) ?>%;font-family:<?= e($data['circle_font']) ?>;text-align:<?= e($data['circle_align']) ?>;align-items:<?= e($data['circle_align'] === 'left' ? 'flex-start' : ($data['circle_align'] === 'right' ? 'flex-end' : 'center')) ?>">
+                                <span class="pk-weekday<?= $data['weekday_visible'] === '0' ? ' pk-text-hidden' : '' ?>" id="pkWeekday" style="font-size:<?= e($data['weekday_size']) ?>cqw;font-weight:<?= e($data['weekday_weight']) ?>"><?= e($data['weekday']) ?></span>
+                                <span class="pk-date<?= $data['date_visible'] === '0' ? ' pk-text-hidden' : '' ?>"    id="pkDate"    style="font-size:<?= e($data['date_size']) ?>cqw;font-weight:<?= e($data['date_weight']) ?>"><?= e($data['date']) ?></span>
+                                <span class="pk-time<?= $data['time_visible'] === '0' ? ' pk-text-hidden' : '' ?>"    id="pkTime"    style="font-size:<?= e($data['time_size']) ?>cqw;font-weight:<?= e($data['time_weight']) ?>"><?= e($data['time']) ?></span>
             </div>
 
             <!-- Venue-Info (rechts unter LIVE KONZERT) -->
             <div class="pk-overlay pk-venue" id="pkVenue"
-                 style="top:<?= e($data['venue_top']) ?>%;right:<?= e($data['venue_right']) ?>%;font-family:<?= e($data['venue_font']) ?>">
-                <span class="pk-venue-l1" id="pkVenueL1" style="font-size:<?= e($data['venue_l1_size']) ?>cqw"><?= e($data['venue_line1']) ?></span>
-                <span class="pk-venue-l2" id="pkVenueL2" style="font-size:<?= e($data['venue_l2_size']) ?>cqw"><?= e($data['venue_line2']) ?></span>
+                  style="top:<?= e($data['venue_top']) ?>%;right:<?= e($data['venue_right']) ?>%;width:<?= e($data['venue_width']) ?>%;font-family:<?= e($data['venue_font']) ?>;text-align:<?= e($data['venue_align']) ?>;align-items:<?= e($data['venue_align'] === 'left' ? 'flex-start' : ($data['venue_align'] === 'right' ? 'flex-end' : 'center')) ?>">
+                                <span class="pk-venue-l1<?= $data['venue_l1_visible'] === '0' ? ' pk-text-hidden' : '' ?>" id="pkVenueL1" style="font-size:<?= e($data['venue_l1_size']) ?>cqw;font-weight:<?= e($data['venue_l1_weight']) ?>"><?= e($data['venue_line1']) ?></span>
+                                <span class="pk-venue-l2<?= $data['venue_l2_visible'] === '0' ? ' pk-text-hidden' : '' ?>" id="pkVenueL2" style="font-size:<?= e($data['venue_l2_size']) ?>cqw;font-weight:<?= e($data['venue_l2_weight']) ?>"><?= e($data['venue_line2']) ?></span>
             </div>
 
             <!-- Venue-Logo (eigenständig positioniert) -->
-            <div class="pk-overlay" id="pkVenueLogoWrap"
+            <div class="pk-overlay pk-logo-overlay<?= $data['venue_logo_visible'] === '0' ? ' pk-text-hidden' : '' ?>" id="pkVenueLogoWrap"
                  style="top:<?= e($data['venue_logo_top']) ?>%;right:<?= e($data['venue_logo_right']) ?>%;width:<?= e($data['venue_logo_width']) ?>%">
                 <img class="pk-img-free" id="pkVenueLogo"
                      src="<?= e($data['venue_logo'] ? url($data['venue_logo']) : '') ?>"
@@ -139,12 +204,93 @@ include __DIR__ . '/header.php';
             </div>
         </div><!-- /pk-canvas -->
         </div><!-- /pkScaler -->
+
+        <div class="pk-text-popup" id="pkTextPopup" hidden>
+            <div class="pk-popup-row pk-popup-align" id="pkPopupAlign">
+                <button type="button" data-align="left" title="Links">L</button>
+                <button type="button" data-align="center" title="Zentriert">C</button>
+                <button type="button" data-align="right" title="Rechts">R</button>
+            </div>
+            <div class="pk-popup-row">
+                <label for="pkPopupFont">Schrift</label>
+                <select id="pkPopupFont">
+                    <option value="Arial, Helvetica, sans-serif">Arial</option>
+                    <option value="Impact, sans-serif">Impact</option>
+                    <option value="Georgia, serif">Georgia</option>
+                    <option value="Verdana, sans-serif">Verdana</option>
+                </select>
+            </div>
+            <div class="pk-popup-row">
+                <label for="pkPopupSize">Größe</label>
+                <input type="number" id="pkPopupSize" step="0.1" min="0.5" max="12">
+            </div>
+            <div class="pk-popup-row">
+                <label for="pkPopupWeight">Gewicht</label>
+                <select id="pkPopupWeight">
+                    <option value="normal">Normal</option>
+                    <option value="bold">Bold</option>
+                </select>
+            </div>
+            <div class="pk-popup-row pk-popup-check-row">
+                <label for="pkPopupVisible">Sichtbar</label>
+                <input type="checkbox" id="pkPopupVisible" checked>
+            </div>
+        </div>
+        <div class="pk-text-popup" id="pkLogoPopup" hidden>
+            <div class="pk-popup-row">
+                <label for="pkLogoPopupPath">Bild</label>
+                <select id="pkLogoPopupPath">
+                    <option value="">-- Bitte waehlen --</option>
+                    <?php foreach ($imageChoices as $imgPath): ?>
+                    <option value="<?= e($imgPath) ?>"><?= e($imgPath) ?></option>
+                    <?php endforeach; ?>
+                </select>
+            </div>
+            <label class="pk-popup-upload-btn" for="pkLogoPopupFile">Bild hochladen
+                <input type="file" id="pkLogoPopupFile" accept="image/*">
+            </label>
+            <div class="pk-popup-row pk-popup-check-row">
+                <label for="pkLogoPopupVisible">Sichtbar</label>
+                <input type="checkbox" id="pkLogoPopupVisible" checked>
+            </div>
+        </div>
+        <datalist id="pkImagePathList">
+            <?php foreach ($imageChoices as $imgPath): ?>
+            <option value="<?= e($imgPath) ?>"></option>
+            <?php endforeach; ?>
+        </datalist>
     </div>
 
     <!-- ===== RECHTS: Editor ===== -->
     <aside class="pk-editor" aria-label="Plakat bearbeiten">
         <form method="post" action="<?= e(url('admin/plakat.php')) ?>" id="pkForm">
             <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+            <input type="hidden" name="circle_align" id="fCircleAlign" value="<?= e($data['circle_align']) ?>">
+            <input type="hidden" name="venue_align" id="fVenueAlign" value="<?= e($data['venue_align']) ?>">
+            <input type="hidden" name="partner_align" id="fPartnerAlign" value="<?= e($data['partner_align']) ?>">
+            <input type="hidden" name="eventsub_align" id="fEventSubAlign" value="<?= e($data['eventsub_align']) ?>">
+            <input type="hidden" name="weekday_weight" id="fWeekdayWeight" value="<?= e($data['weekday_weight']) ?>">
+            <input type="hidden" name="weekday_visible" id="fWeekdayVisible" value="<?= e($data['weekday_visible']) ?>">
+            <input type="hidden" name="date_weight" id="fDateWeight" value="<?= e($data['date_weight']) ?>">
+            <input type="hidden" name="date_visible" id="fDateVisible" value="<?= e($data['date_visible']) ?>">
+            <input type="hidden" name="time_weight" id="fTimeWeight" value="<?= e($data['time_weight']) ?>">
+            <input type="hidden" name="time_visible" id="fTimeVisible" value="<?= e($data['time_visible']) ?>">
+            <input type="hidden" name="venue_l1_weight" id="fVenueL1Weight" value="<?= e($data['venue_l1_weight']) ?>">
+            <input type="hidden" name="venue_l1_visible" id="fVenueL1Visible" value="<?= e($data['venue_l1_visible']) ?>">
+            <input type="hidden" name="venue_l2_weight" id="fVenueL2Weight" value="<?= e($data['venue_l2_weight']) ?>">
+            <input type="hidden" name="venue_l2_visible" id="fVenueL2Visible" value="<?= e($data['venue_l2_visible']) ?>">
+            <input type="hidden" name="partner_name_weight" id="fPartnerNameWeight" value="<?= e($data['partner_name_weight']) ?>">
+            <input type="hidden" name="partner_name_visible" id="fPartnerNameVisible" value="<?= e($data['partner_name_visible']) ?>">
+            <input type="hidden" name="partner_sub_weight" id="fPartnerSubWeight" value="<?= e($data['partner_sub_weight']) ?>">
+            <input type="hidden" name="partner_sub_visible" id="fPartnerSubVisible" value="<?= e($data['partner_sub_visible']) ?>">
+            <input type="hidden" name="eventsub_weight" id="fEventSubWeight" value="<?= e($data['eventsub_weight']) ?>">
+            <input type="hidden" name="eventsub_visible" id="fEventSubVisible" value="<?= e($data['eventsub_visible']) ?>">
+            <input type="hidden" name="circle_width" id="fCircleWidth" value="<?= e($data['circle_width']) ?>">
+            <input type="hidden" name="venue_width" id="fVenueWidth" value="<?= e($data['venue_width']) ?>">
+            <input type="hidden" name="partner_width" id="fPartnerWidth" value="<?= e($data['partner_width']) ?>">
+            <input type="hidden" name="eventsub_width" id="fEventSubWidth" value="<?= e($data['eventsub_width']) ?>">
+            <input type="hidden" name="partner_logo_visible" id="fPartnerLogoVisible" value="<?= e($data['partner_logo_visible']) ?>">
+            <input type="hidden" name="venue_logo_visible" id="fVenueLogoVisible" value="<?= e($data['venue_logo_visible']) ?>">
             <?php $fonts = ['Arial, Helvetica, sans-serif' => 'Arial', 'Impact, sans-serif' => 'Impact', 'Georgia, serif' => 'Georgia', 'Verdana, sans-serif' => 'Verdana']; ?>
 
             <h2>Bearbeiten</h2>
@@ -228,7 +374,7 @@ include __DIR__ . '/header.php';
                 </div>
                 <label>Logo
                     <input type="text" name="venue_logo" id="fVenueLogo"
-                           value="<?= e($data['venue_logo']) ?>" placeholder="z.B. images/Amthof.png">
+                           value="<?= e($data['venue_logo']) ?>" list="pkImagePathList" placeholder="z.B. images/Amthof.png">
                 </label>
                 <label>Logo hochladen
                     <input type="file" id="fVenueLogoFile" accept="image/*">
@@ -271,7 +417,7 @@ include __DIR__ . '/header.php';
                 <legend>Partner / Sponsor (optional)</legend>
                 <label>Logo
                     <input type="text" name="partner_logo" id="fPartnerLogo"
-                           value="<?= e($data['partner_logo']) ?>" placeholder="z.B. images/Bellantik.png">
+                           value="<?= e($data['partner_logo']) ?>" list="pkImagePathList" placeholder="z.B. images/Bellantik.png">
                 </label>
                 <label>Logo hochladen
                     <input type="file" id="fPartnerLogoFile" accept="image/*">
@@ -362,8 +508,6 @@ include __DIR__ . '/header.php';
             </fieldset>
 
             </div><!-- /pk-editor-cards -->
-
-            <button type="submit" class="btn">Speichern</button>
         </form>
     </aside>
 </div>
@@ -428,6 +572,7 @@ include __DIR__ . '/header.php';
 .pk-preview-wrap {
     flex: 0 0 clamp(320px, 36vw, 520px);
     width: clamp(320px, 36vw, 520px);
+    position: relative;
     min-width: 0;
     overflow-x: auto;
     overflow-y: visible;
@@ -528,6 +673,151 @@ include __DIR__ . '/header.php';
 /* Alle Overlays absolut zum Canvas */
 .pk-overlay { position: absolute; }
 
+/* Inline text editing on poster */
+.pk-editable-text {
+    cursor: pointer;
+    user-select: none;
+}
+.pk-editable-text.is-editing {
+    cursor: text;
+    user-select: text;
+}
+.pk-editable-text.is-editing:focus {
+    outline: 1px dashed rgba(255,255,255,.8);
+    outline-offset: 2px;
+    background: rgba(0,0,0,.28);
+}
+
+/* Drag handles for direct positioning */
+.pk-draggable { position: absolute; }
+.pk-drag-handle {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 22px;
+    height: 10px;
+    border-radius: 10px;
+    border: 1px solid rgba(255,255,255,.85);
+    background: rgba(0,0,0,.6);
+    cursor: move;
+    opacity: 0;
+    transition: opacity .15s ease;
+}
+.pk-draggable.pk-active .pk-drag-handle,
+.pk-draggable:hover .pk-drag-handle {
+    opacity: 1;
+}
+
+/* Resize handle – bottom-right corner of text boxes */
+.pk-resize-handle {
+    position: absolute;
+    bottom: -7px;
+    right: -7px;
+    width: 14px;
+    height: 14px;
+    background: rgba(212,165,68,.9);
+    border: 1px solid rgba(255,255,255,.85);
+    border-radius: 3px;
+    cursor: se-resize;
+    opacity: 0;
+    transition: opacity .15s ease;
+    z-index: 5;
+}
+.pk-resize-handle-left {
+    right: auto;
+    left: -7px;
+    cursor: sw-resize;
+}
+.pk-draggable.pk-active .pk-resize-handle,
+.pk-draggable:hover .pk-resize-handle {
+    opacity: 1;
+}
+
+/* Floating text tools popup */
+.pk-text-popup {
+    position: absolute;
+    z-index: 30;
+    min-width: 180px;
+    background: rgba(8,8,12,.95);
+    border: 1px solid rgba(212,168,90,.55);
+    border-radius: 8px;
+    box-shadow: 0 8px 18px rgba(0,0,0,.38);
+    padding: 8px;
+}
+.pk-popup-row {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 8px;
+    align-items: center;
+    margin: 6px 0;
+}
+.pk-popup-row label {
+    font-size: .78rem;
+    color: #f0c878;
+}
+.pk-popup-row select,
+.pk-popup-row input {
+    width: 100%;
+    box-sizing: border-box;
+    background: rgba(0,0,0,.42);
+    color: #f4ead8;
+    border: 1px solid rgba(255,255,255,.18);
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: .82rem;
+}
+.pk-popup-check-row {
+    grid-template-columns: 1fr auto;
+}
+.pk-popup-check-row input[type=checkbox] {
+    width: 16px;
+    height: 16px;
+    accent-color: #d4a544;
+    justify-self: end;
+}
+.pk-popup-align {
+    display: flex;
+    gap: 6px;
+    margin: 0 0 6px;
+}
+.pk-popup-align button {
+    flex: 1;
+    background: rgba(255,255,255,.06);
+    color: #f4ead8;
+    border: 1px solid rgba(255,255,255,.2);
+    border-radius: 4px;
+    padding: 4px 6px;
+    font-size: .78rem;
+    cursor: pointer;
+}
+.pk-popup-align button.is-active {
+    border-color: #d4a544;
+    background: rgba(212,165,68,.2);
+    color: #ffd98f;
+}
+.pk-text-hidden {
+    opacity: .25;
+}
+.pk-popup-upload-btn {
+    display: block;
+    margin: 6px 0;
+    padding: 5px 8px;
+    background: rgba(212,165,68,.1);
+    border: 1px solid rgba(212,165,68,.35);
+    border-radius: 4px;
+    color: #f0c878;
+    font-size: .78rem;
+    cursor: pointer;
+    text-align: center;
+}
+.pk-popup-upload-btn input[type=file] {
+    display: none;
+}
+.pk-logo-overlay {
+    cursor: default;
+}
+
 /* --- Partner-Bereich: oben links --- */
 .pk-partner {
     top: 13%; left: 2%;
@@ -574,6 +864,8 @@ include __DIR__ . '/header.php';
     font-size: 1.7cqw;
     font-weight: 600;
     color: #1a1a1a;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 /* --- Weißer Kreis: Datum/Zeit --- */
@@ -610,12 +902,16 @@ include __DIR__ . '/header.php';
     color: #fff;
     font-weight: 600;
     line-height: 1.3;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 .pk-venue-l2 {
     display: block;
     font-size: 1.7cqw;
     color: #fff;
     line-height: 1.3;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 .pk-venue-logo {
     margin-top: 2%;
@@ -643,6 +939,7 @@ include __DIR__ . '/header.php';
     .pk-preview-wrap { overflow: visible; }
     #pkScaler { width: 100% !important; }
     .pk-bg { max-width: 100%; width: 100%; }
+    .pk-text-hidden { display: none !important; }
 }
 </style>
 
@@ -660,6 +957,47 @@ include __DIR__ . '/header.php';
         if (!src) { el.style.display = 'none'; el.src = ''; return; }
         el.src = src;
         el.style.display = '';
+    }
+
+    function clamp(v, min, max) {
+        return Math.max(min, Math.min(max, v));
+    }
+
+    function roundToStep(v, step) {
+        var s = parseFloat(step);
+        if (!s || s <= 0) return Math.round(v * 10) / 10;
+        return Math.round(v / s) * s;
+    }
+
+    function formatFieldValue(field, value) {
+        var step = field ? field.getAttribute('step') : null;
+        var rounded = roundToStep(value, step || '0.1');
+        if (!field || !step) return String(roundToStep(rounded, '0.1'));
+
+        var stepStr = String(step);
+        var decimals = 0;
+        if (stepStr.indexOf('.') >= 0) {
+            decimals = stepStr.split('.')[1].length;
+        }
+        return rounded.toFixed(decimals);
+    }
+
+    function dispatchInput(el) {
+        if (!el) return;
+        el.dispatchEvent(new Event('input', { bubbles: true }));
+    }
+
+    function applyAreaAlign(targetEl, align) {
+        if (!targetEl) return;
+        targetEl.style.textAlign = align;
+        if (targetEl.classList.contains('pk-circle') || targetEl.classList.contains('pk-venue') || targetEl.classList.contains('pk-partner')) {
+            targetEl.style.alignItems = align === 'left' ? 'flex-start' : (align === 'right' ? 'flex-end' : 'center');
+        }
+    }
+
+    function applyTextVisibility(targetEl, isVisible) {
+        if (!targetEl) return;
+        targetEl.classList.toggle('pk-text-hidden', !isVisible);
     }
 
     var map = [
@@ -688,27 +1026,631 @@ include __DIR__ . '/header.php';
         });
     });
 
+    function setActiveOverlay(overlay) {
+        document.querySelectorAll('.pk-draggable.pk-active').forEach(function (el) {
+            el.classList.remove('pk-active');
+        });
+        if (overlay) overlay.classList.add('pk-active');
+    }
+
+    var textPopup = document.getElementById('pkTextPopup');
+    var popupAlign = document.getElementById('pkPopupAlign');
+    var popupFont = document.getElementById('pkPopupFont');
+    var popupSize = document.getElementById('pkPopupSize');
+    var popupWeight = document.getElementById('pkPopupWeight');
+    var popupVisible = document.getElementById('pkPopupVisible');
+    var printLink = document.getElementById('pkPrintLink');
+    var formEl = document.getElementById('pkForm');
+    var imagePathList = document.getElementById('pkImagePathList');
+    var printAfterSaveStorageKey = 'pk-open-print-after-save';
+    var navAfterSaveStorageKey = 'pk-open-nav-after-save';
+    var activeTextCfg = null;
+    var activeTextEl = null;
+
+    var textToolMap = {
+        pkWeekday: { alignFieldId: 'fCircleAlign',  alignTargetId: 'pkCircle',      fontFieldId: 'fCircleFont',   sizeFieldId: 'fWeekdaySize',     weightFieldId: 'fWeekdayWeight',    visibleFieldId: 'fWeekdayVisible' },
+        pkDate:    { alignFieldId: 'fCircleAlign',  alignTargetId: 'pkCircle',      fontFieldId: 'fCircleFont',   sizeFieldId: 'fDateSize',        weightFieldId: 'fDateWeight',       visibleFieldId: 'fDateVisible' },
+        pkTime:    { alignFieldId: 'fCircleAlign',  alignTargetId: 'pkCircle',      fontFieldId: 'fCircleFont',   sizeFieldId: 'fTimeSize',        weightFieldId: 'fTimeWeight',       visibleFieldId: 'fTimeVisible' },
+        pkVenueL1: { alignFieldId: 'fVenueAlign',   alignTargetId: 'pkVenue',       fontFieldId: 'fVenueFont',    sizeFieldId: 'fVenueL1Size',     weightFieldId: 'fVenueL1Weight',    visibleFieldId: 'fVenueL1Visible' },
+        pkVenueL2: { alignFieldId: 'fVenueAlign',   alignTargetId: 'pkVenue',       fontFieldId: 'fVenueFont',    sizeFieldId: 'fVenueL2Size',     weightFieldId: 'fVenueL2Weight',    visibleFieldId: 'fVenueL2Visible' },
+        pkPartnerName: { alignFieldId: 'fPartnerAlign', alignTargetId: 'pkPartnerArea', fontFieldId: 'fPartnerFont', sizeFieldId: 'fPartnerNameSize', weightFieldId: 'fPartnerNameWeight', visibleFieldId: 'fPartnerNameVisible' },
+        pkPartnerSub:  { alignFieldId: 'fPartnerAlign', alignTargetId: 'pkPartnerArea', fontFieldId: 'fPartnerFont', sizeFieldId: 'fPartnerSubSize',  weightFieldId: 'fPartnerSubWeight',  visibleFieldId: 'fPartnerSubVisible' },
+        pkEventSub:    { alignFieldId: 'fEventSubAlign', alignTargetId: 'pkEventSub', fontFieldId: 'fEventSubFont', sizeFieldId: 'fEventSubSize',    weightFieldId: 'fEventSubWeight',   visibleFieldId: 'fEventSubVisible' }
+    };
+
+    function setActiveAlignButton(align) {
+        if (!popupAlign) return;
+        popupAlign.querySelectorAll('button[data-align]').forEach(function (btn) {
+            btn.classList.toggle('is-active', btn.getAttribute('data-align') === align);
+        });
+    }
+
+    function positionTextPopup() {
+        if (!textPopup || textPopup.hidden || !activeTextEl || !previewWrap) return;
+        var wrapRect = previewWrap.getBoundingClientRect();
+        var textRect = activeTextEl.getBoundingClientRect();
+        var left = (textRect.left - wrapRect.left) + (textRect.width / 2);
+        var top = textRect.top - wrapRect.top - textPopup.offsetHeight - 10;
+        if (top < 6) {
+            top = textRect.bottom - wrapRect.top + 10;
+        }
+        left = clamp(left - (textPopup.offsetWidth / 2), 6, Math.max(6, previewWrap.clientWidth - textPopup.offsetWidth - 6));
+        top = clamp(top, 6, Math.max(6, previewWrap.clientHeight - textPopup.offsetHeight - 6));
+        textPopup.style.left = left + 'px';
+        textPopup.style.top = top + 'px';
+    }
+
+    function showTextPopup(el) {
+        if (!textPopup || !el) return;
+        var cfg = textToolMap[el.id];
+        if (!cfg) return;
+        var alignField = document.getElementById(cfg.alignFieldId);
+        var fontField = document.getElementById(cfg.fontFieldId);
+        var sizeField = document.getElementById(cfg.sizeFieldId);
+        var weightField = document.getElementById(cfg.weightFieldId);
+        var visibleField = document.getElementById(cfg.visibleFieldId);
+        if (!alignField || !fontField || !sizeField || !weightField || !visibleField) return;
+
+        activeTextCfg = cfg;
+        activeTextEl = el;
+        popupFont.value = fontField.value;
+        popupSize.value = sizeField.value;
+        if (popupWeight) popupWeight.value = weightField.value || 'normal';
+        if (popupVisible) popupVisible.checked = visibleField.value !== '0';
+        setActiveAlignButton(alignField.value || 'center');
+        textPopup.hidden = false;
+        positionTextPopup();
+    }
+
+    function hideTextPopup() {
+        if (!textPopup) return;
+        textPopup.hidden = true;
+        activeTextCfg = null;
+        activeTextEl = null;
+    }
+
+    if (popupAlign) {
+        popupAlign.addEventListener('click', function (ev) {
+            var btn = ev.target.closest('button[data-align]');
+            if (!btn || !activeTextCfg) return;
+            var alignValue = btn.getAttribute('data-align') || 'center';
+            var alignField = document.getElementById(activeTextCfg.alignFieldId);
+            var alignTarget = document.getElementById(activeTextCfg.alignTargetId);
+            if (!alignField || !alignTarget) return;
+            alignField.value = alignValue;
+            setActiveAlignButton(alignValue);
+            applyAreaAlign(alignTarget, alignValue);
+        });
+    }
+    if (popupFont) {
+        popupFont.addEventListener('change', function () {
+            if (!activeTextCfg) return;
+            var fontField = document.getElementById(activeTextCfg.fontFieldId);
+            if (!fontField) return;
+            fontField.value = popupFont.value;
+            dispatchInput(fontField);
+        });
+    }
+    if (popupSize) {
+        popupSize.addEventListener('input', function () {
+            if (!activeTextCfg) return;
+            var sizeField = document.getElementById(activeTextCfg.sizeFieldId);
+            if (!sizeField) return;
+            sizeField.value = popupSize.value;
+            dispatchInput(sizeField);
+        });
+    }
+    if (popupWeight) {
+        popupWeight.addEventListener('change', function () {
+            if (!activeTextCfg) return;
+            var weightField = document.getElementById(activeTextCfg.weightFieldId);
+            if (!weightField) return;
+            weightField.value = popupWeight.value;
+            dispatchInput(weightField);
+        });
+    }
+    if (popupVisible) {
+        popupVisible.addEventListener('change', function () {
+            if (!activeTextCfg || !activeTextEl) return;
+            var visibleField = document.getElementById(activeTextCfg.visibleFieldId);
+            if (!visibleField) return;
+            visibleField.value = popupVisible.checked ? '1' : '0';
+            applyTextVisibility(activeTextEl, popupVisible.checked);
+        });
+    }
+
+    if (previewWrap) {
+        previewWrap.addEventListener('scroll', positionTextPopup);
+    }
+    window.addEventListener('resize', positionTextPopup);
+    document.addEventListener('mousedown', function (ev) {
+        if (textPopup && !textPopup.hidden) {
+            var insidePopup = textPopup.contains(ev.target);
+            var textEl = ev.target.closest('.pk-editable-text');
+            if (!insidePopup && !textEl) hideTextPopup();
+        }
+        if (logoPopup && !logoPopup.hidden) {
+            var insideLogoPopup = logoPopup.contains(ev.target);
+            var logoEl = ev.target.closest('.pk-logo-overlay');
+            if (!insideLogoPopup && !logoEl) hideLogoPopup();
+        }
+    });
+
+    /* Logo overlay popup (double-click) */
+    var logoPopup = document.getElementById('pkLogoPopup');
+    var logoPopupPath = document.getElementById('pkLogoPopupPath');
+    var logoPopupFile = document.getElementById('pkLogoPopupFile');
+    var logoPopupVisible = document.getElementById('pkLogoPopupVisible');
+    var activeLogoCfg = null;
+    var activeLogoEl = null;
+
+    var logoToolMap = {
+        pkPartnerLogoWrap: { pathFieldId: 'fPartnerLogo', imgElId: 'pkPartnerLogo', visibleFieldId: 'fPartnerLogoVisible' },
+        pkVenueLogoWrap:   { pathFieldId: 'fVenueLogo',   imgElId: 'pkVenueLogo',   visibleFieldId: 'fVenueLogoVisible' }
+    };
+
+    function positionLogoPopup() {
+        if (!logoPopup || logoPopup.hidden || !activeLogoEl || !previewWrap) return;
+        var wrapRect = previewWrap.getBoundingClientRect();
+        var elRect = activeLogoEl.getBoundingClientRect();
+        var left = (elRect.left - wrapRect.left) + (elRect.width / 2);
+        var top = elRect.top - wrapRect.top - logoPopup.offsetHeight - 10;
+        if (top < 6) top = elRect.bottom - wrapRect.top + 10;
+        left = clamp(left - (logoPopup.offsetWidth / 2), 6, Math.max(6, previewWrap.clientWidth - logoPopup.offsetWidth - 6));
+        top = clamp(top, 6, Math.max(6, previewWrap.clientHeight - logoPopup.offsetHeight - 6));
+        logoPopup.style.left = left + 'px';
+        logoPopup.style.top = top + 'px';
+    }
+
+    function showLogoPopup(el) {
+        if (!logoPopup || !el) return;
+        var cfg = logoToolMap[el.id];
+        if (!cfg) return;
+        var pathField = document.getElementById(cfg.pathFieldId);
+        var visibleField = document.getElementById(cfg.visibleFieldId);
+        if (!pathField || !visibleField) return;
+        activeLogoCfg = cfg;
+        activeLogoEl = el;
+        if (logoPopupPath) logoPopupPath.value = pathField.value.startsWith('data:') ? '' : pathField.value;
+        if (logoPopupVisible) logoPopupVisible.checked = visibleField.value !== '0';
+        logoPopup.hidden = false;
+        positionLogoPopup();
+    }
+
+    function hideLogoPopup() {
+        if (!logoPopup) return;
+        logoPopup.hidden = true;
+        activeLogoCfg = null;
+        activeLogoEl = null;
+    }
+
+    function ensureImagePathOption(path) {
+        if (!path) return;
+        var normalized = String(path);
+
+        function hasOptionValue(container) {
+            if (!container) return false;
+            var opts = container.querySelectorAll('option');
+            for (var i = 0; i < opts.length; i++) {
+                if (opts[i].value === normalized) return true;
+            }
+            return false;
+        }
+
+        if (imagePathList && !hasOptionValue(imagePathList)) {
+            var dlOpt = document.createElement('option');
+            dlOpt.value = normalized;
+            imagePathList.appendChild(dlOpt);
+        }
+
+        if (logoPopupPath && logoPopupPath.tagName === 'SELECT' && !hasOptionValue(logoPopupPath)) {
+            var selectOpt = document.createElement('option');
+            selectOpt.value = normalized;
+            selectOpt.textContent = normalized;
+            logoPopupPath.appendChild(selectOpt);
+        }
+    }
+
+    function uploadLogoFile(file, onDone) {
+        if (!file || !formEl) return;
+        var csrfField = formEl.querySelector('input[name="csrf"]');
+        var payload = new FormData();
+        payload.append('image', file);
+        payload.append('csrf', csrfField ? csrfField.value : '');
+
+        fetch('<?= e(url('admin/plakat_upload.php')) ?>', {
+            method: 'POST',
+            body: payload,
+            credentials: 'same-origin'
+        })
+        .then(function (resp) {
+            if (!resp.ok) throw new Error('Upload fehlgeschlagen');
+            return resp.json();
+        })
+        .then(function (data) {
+            if (!data || !data.ok || !data.path) {
+                throw new Error((data && data.error) ? data.error : 'Upload fehlgeschlagen');
+            }
+            ensureImagePathOption(data.path);
+            if (typeof onDone === 'function') onDone(data.path);
+        })
+        .catch(function (err) {
+            window.alert(err && err.message ? err.message : 'Upload fehlgeschlagen');
+        });
+    }
+
+    function getFormSnapshot() {
+        if (!formEl) return '';
+        var fd = new FormData(formEl);
+        var pairs = [];
+        fd.forEach(function (val, key) {
+            pairs.push(key + '=' + String(val));
+        });
+        pairs.sort();
+        return pairs.join('&');
+    }
+
+    var initialFormSnapshot = getFormSnapshot();
+
+    function isFormDirty() {
+        return getFormSnapshot() !== initialFormSnapshot;
+    }
+
+    if (printLink) {
+        printLink.addEventListener('click', function (ev) {
+            if (!isFormDirty()) return;
+            ev.preventDefault();
+            var shouldSave = window.confirm('Es gibt ungespeicherte Aenderungen. Vor dem Drucken/PDF zuerst speichern?');
+            if (!shouldSave) return;
+            if (!formEl) return;
+            try {
+                window.sessionStorage.setItem(printAfterSaveStorageKey, printLink.href);
+            } catch (err) {
+                /* Ignore unavailable sessionStorage */
+            }
+            formEl.submit();
+        });
+    }
+
+    var menuLinks = document.querySelectorAll('.admin-header a[href]');
+    menuLinks.forEach(function (link) {
+        link.addEventListener('click', function (ev) {
+            if (!isFormDirty()) return;
+            if (ev.defaultPrevented) return;
+            if (ev.button !== 0) return;
+            if (ev.metaKey || ev.ctrlKey || ev.shiftKey || ev.altKey) return;
+
+            var href = link.getAttribute('href') || '';
+            if (!href || href.charAt(0) === '#') return;
+
+            var targetUrl;
+            try {
+                targetUrl = new URL(link.href, window.location.href);
+            } catch (err) {
+                return;
+            }
+            if (targetUrl.href === window.location.href) return;
+
+            ev.preventDefault();
+            var shouldSave = window.confirm('Es gibt ungespeicherte Aenderungen. Vor dem Wechsel zuerst speichern?');
+            if (!shouldSave) return;
+            if (!formEl) return;
+
+            try {
+                window.sessionStorage.setItem(navAfterSaveStorageKey, targetUrl.href);
+            } catch (err) {
+                /* Ignore unavailable sessionStorage */
+            }
+            formEl.submit();
+        });
+    });
+
+    try {
+        var printAfterSaveUrl = window.sessionStorage.getItem(printAfterSaveStorageKey);
+        if (printAfterSaveUrl) {
+            window.sessionStorage.removeItem(printAfterSaveStorageKey);
+            window.open(printAfterSaveUrl, '_blank', 'noopener');
+        }
+    } catch (err) {
+        /* Ignore unavailable sessionStorage */
+    }
+
+    try {
+        var navAfterSaveUrl = window.sessionStorage.getItem(navAfterSaveStorageKey);
+        if (navAfterSaveUrl) {
+            window.sessionStorage.removeItem(navAfterSaveStorageKey);
+            window.location.assign(navAfterSaveUrl);
+        }
+    } catch (err) {
+        /* Ignore unavailable sessionStorage */
+    }
+
+    if (logoPopupPath) {
+        logoPopupPath.addEventListener('change', function () {
+            if (!activeLogoCfg) return;
+            var pathField = document.getElementById(activeLogoCfg.pathFieldId);
+            var imgEl = document.getElementById(activeLogoCfg.imgElId);
+            if (!pathField || !imgEl) return;
+            pathField.value = logoPopupPath.value;
+            setImg(imgEl, imgSrc(logoPopupPath.value));
+        });
+    }
+    if (logoPopupFile) {
+        logoPopupFile.addEventListener('change', function (ev) {
+            var file = ev.target.files && ev.target.files[0];
+            if (!file || !activeLogoCfg) return;
+            var pathField = document.getElementById(activeLogoCfg.pathFieldId);
+            var imgEl = document.getElementById(activeLogoCfg.imgElId);
+            if (!pathField || !imgEl) return;
+            uploadLogoFile(file, function (storedPath) {
+                pathField.value = storedPath;
+                if (logoPopupPath) logoPopupPath.value = storedPath;
+                setImg(imgEl, imgSrc(storedPath));
+            });
+            logoPopupFile.value = '';
+        });
+    }
+    if (logoPopupVisible) {
+        logoPopupVisible.addEventListener('change', function () {
+            if (!activeLogoCfg || !activeLogoEl) return;
+            var visibleField = document.getElementById(activeLogoCfg.visibleFieldId);
+            if (!visibleField) return;
+            visibleField.value = logoPopupVisible.checked ? '1' : '0';
+            applyTextVisibility(activeLogoEl, logoPopupVisible.checked);
+        });
+    }
+    window.addEventListener('resize', positionLogoPopup);
+
+    /* Inline text editing directly on poster (double-click to edit, Esc cancels) */
+    function bindInlineText(fieldId, elementId) {
+        var field = document.getElementById(fieldId);
+        var el = document.getElementById(elementId);
+        if (!field || !el) return;
+        var originalText = field.value;
+
+        el.setAttribute('contenteditable', 'false');
+        el.setAttribute('spellcheck', 'false');
+        el.setAttribute('tabindex', '0');
+        el.classList.add('pk-editable-text');
+
+        function stopEdit(commit) {
+            if (el.getAttribute('contenteditable') !== 'true') return;
+            if (commit) {
+                field.value = el.textContent;
+            } else {
+                el.textContent = originalText;
+                field.value = originalText;
+            }
+            el.setAttribute('contenteditable', 'false');
+            el.classList.remove('is-editing');
+        }
+
+        el.addEventListener('click', function () {
+            setActiveOverlay(el.closest('.pk-draggable'));
+            showTextPopup(el);
+        });
+
+        el.addEventListener('dblclick', function (ev) {
+            ev.preventDefault();
+            setActiveOverlay(el.closest('.pk-draggable'));
+            showTextPopup(el);
+            originalText = field.value;
+            el.setAttribute('contenteditable', 'true');
+            el.classList.add('is-editing');
+            el.focus();
+            var sel = window.getSelection();
+            if (!sel) return;
+            var range = document.createRange();
+            range.selectNodeContents(el);
+            range.collapse(false);
+            sel.removeAllRanges();
+            sel.addRange(range);
+        });
+
+        el.addEventListener('keydown', function (ev) {
+            if (ev.key === 'Enter') {
+                ev.preventDefault();
+                stopEdit(true);
+                el.blur();
+            }
+            if (ev.key === 'Escape') {
+                ev.preventDefault();
+                stopEdit(false);
+                el.blur();
+            }
+        });
+
+        el.addEventListener('input', function () {
+            if (el.getAttribute('contenteditable') === 'true') {
+                field.value = el.textContent;
+            }
+        });
+
+        el.addEventListener('blur', function () {
+            stopEdit(true);
+        });
+    }
+
+    [
+        ['fWeekday', 'pkWeekday'],
+        ['fDate', 'pkDate'],
+        ['fTime', 'pkTime'],
+        ['fVenueL1', 'pkVenueL1'],
+        ['fVenueL2', 'pkVenueL2'],
+        ['fPartnerName', 'pkPartnerName'],
+        ['fPartnerSub', 'pkPartnerSub'],
+        ['fEventSub', 'pkEventSub']
+    ].forEach(function (pair) {
+        bindInlineText(pair[0], pair[1]);
+    });
+
+    /* Drag text areas directly on poster and sync position inputs */
+    function bindDragOverlay(cfg) {
+        var overlay = document.getElementById(cfg.overlayId);
+        var topField = document.getElementById(cfg.topFieldId);
+        var leftField = cfg.leftFieldId ? document.getElementById(cfg.leftFieldId) : null;
+        var rightField = cfg.rightFieldId ? document.getElementById(cfg.rightFieldId) : null;
+        var canvas = document.getElementById('pkCanvas');
+        if (!overlay || !topField || (!leftField && !rightField) || !canvas) return;
+
+        overlay.classList.add('pk-draggable');
+        var handle = document.createElement('span');
+        handle.className = 'pk-drag-handle';
+        handle.title = 'Ziehen';
+        overlay.appendChild(handle);
+
+        overlay.addEventListener('mousedown', function () {
+            setActiveOverlay(overlay);
+        });
+
+        handle.addEventListener('mousedown', function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            setActiveOverlay(overlay);
+
+            var canvasRect = canvas.getBoundingClientRect();
+            var overlayRect = overlay.getBoundingClientRect();
+            var widthPct = (overlayRect.width / canvasRect.width) * 100;
+            var heightPct = (overlayRect.height / canvasRect.height) * 100;
+            var startX = ev.clientX;
+            var startY = ev.clientY;
+            var startTop = parseFloat(topField.value) || 0;
+            var startLeft;
+
+            if (leftField) {
+                startLeft = parseFloat(leftField.value) || 0;
+            } else {
+                var startRight = parseFloat(rightField.value) || 0;
+                startLeft = 100 - startRight - widthPct;
+            }
+
+            function onMove(moveEv) {
+                var dxPct = ((moveEv.clientX - startX) / canvasRect.width) * 100;
+                var dyPct = ((moveEv.clientY - startY) / canvasRect.height) * 100;
+                var nextTop = clamp(startTop + dyPct, 0, 100 - heightPct);
+                var nextLeft = clamp(startLeft + dxPct, 0, 100 - widthPct);
+
+                topField.value = formatFieldValue(topField, nextTop);
+                overlay.style.top = topField.value + '%';
+
+                if (leftField) {
+                    leftField.value = formatFieldValue(leftField, nextLeft);
+                    overlay.style.left = leftField.value + '%';
+                } else {
+                    var nextRight = clamp(100 - nextLeft - widthPct, 0, 100);
+                    rightField.value = formatFieldValue(rightField, nextRight);
+                    overlay.style.right = rightField.value + '%';
+                }
+            }
+
+            function onUp() {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+            }
+
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        });
+    }
+
+    [
+        { overlayId: 'pkCircle',         topFieldId: 'fCircleTop',      leftFieldId: 'fCircleLeft' },
+        { overlayId: 'pkVenue',          topFieldId: 'fVenueTop',       rightFieldId: 'fVenueRight' },
+        { overlayId: 'pkPartnerArea',    topFieldId: 'fPartnerTop',     leftFieldId: 'fPartnerLeft' },
+        { overlayId: 'pkEventSub',       topFieldId: 'fEventSubTop',    leftFieldId: 'fEventSubLeft' },
+        { overlayId: 'pkPartnerLogoWrap', topFieldId: 'fPartnerLogoTop', leftFieldId: 'fPartnerLogoLeft' },
+        { overlayId: 'pkVenueLogoWrap',  topFieldId: 'fVenueLogoTop',   rightFieldId: 'fVenueLogoRight' }
+    ].forEach(bindDragOverlay);
+
+    /* Resize text overlay width by dragging corner handle */
+    function bindResizeOverlay(cfg) {
+        var overlay = document.getElementById(cfg.overlayId);
+        var widthField = document.getElementById(cfg.widthFieldId);
+        var canvas = document.getElementById('pkCanvas');
+        if (!overlay || !widthField || !canvas) return;
+
+        var handle = document.createElement('span');
+        handle.className = cfg.rightAnchored
+            ? 'pk-resize-handle pk-resize-handle-left'
+            : 'pk-resize-handle';
+        handle.title = 'Breite ändern';
+        overlay.appendChild(handle);
+
+        handle.addEventListener('mousedown', function (ev) {
+            ev.preventDefault();
+            ev.stopPropagation();
+            setActiveOverlay(overlay);
+
+            var canvasRect = canvas.getBoundingClientRect();
+            var startX = ev.clientX;
+            var startWidth = parseFloat(widthField.value) || 28;
+
+            function onMove(moveEv) {
+                var dxPct = ((moveEv.clientX - startX) / canvasRect.width) * 100;
+                /* Right-anchored overlays grow leftward, so invert direction */
+                var nextWidth = clamp(startWidth + (cfg.rightAnchored ? -dxPct : dxPct), 5, 95);
+                widthField.value = formatFieldValue(widthField, nextWidth);
+                overlay.style.width = widthField.value + '%';
+            }
+
+            function onUp() {
+                document.removeEventListener('mousemove', onMove);
+                document.removeEventListener('mouseup', onUp);
+            }
+
+            document.addEventListener('mousemove', onMove);
+            document.addEventListener('mouseup', onUp);
+        });
+    }
+
+    [
+        { overlayId: 'pkCircle',          widthFieldId: 'fCircleWidth' },
+        { overlayId: 'pkVenue',           widthFieldId: 'fVenueWidth',        rightAnchored: true },
+        { overlayId: 'pkPartnerArea',     widthFieldId: 'fPartnerWidth' },
+        { overlayId: 'pkEventSub',        widthFieldId: 'fEventSubWidth' },
+        { overlayId: 'pkPartnerLogoWrap', widthFieldId: 'fPartnerLogoWidth' },
+        { overlayId: 'pkVenueLogoWrap',   widthFieldId: 'fVenueLogoWidth',    rightAnchored: true }
+    ].forEach(bindResizeOverlay);
+
+    /* Logo overlays: double-click to open edit popup */
+    ['pkPartnerLogoWrap', 'pkVenueLogoWrap'].forEach(function (id) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.addEventListener('dblclick', function (ev) {
+            ev.preventDefault();
+            showLogoPopup(el);
+        });
+    });
+
     /* Position, font-size & font-family live updates */
     var styleMap = [
         { field: 'fCircleTop',    el: 'pkCircle',  prop: 'top',        unit: '%'   },
         { field: 'fCircleLeft',   el: 'pkCircle',  prop: 'left',       unit: '%'   },
         { field: 'fCircleFont',   el: 'pkCircle',  prop: 'fontFamily', unit: ''    },
         { field: 'fWeekdaySize',  el: 'pkWeekday', prop: 'fontSize',   unit: 'cqw' },
+        { field: 'fWeekdayWeight', el: 'pkWeekday', prop: 'fontWeight', unit: '' },
         { field: 'fDateSize',     el: 'pkDate',    prop: 'fontSize',   unit: 'cqw' },
+        { field: 'fDateWeight',   el: 'pkDate',    prop: 'fontWeight', unit: '' },
         { field: 'fTimeSize',     el: 'pkTime',    prop: 'fontSize',   unit: 'cqw' },
+        { field: 'fTimeWeight',   el: 'pkTime',    prop: 'fontWeight', unit: '' },
         { field: 'fVenueTop',     el: 'pkVenue',   prop: 'top',        unit: '%'   },
         { field: 'fVenueRight',   el: 'pkVenue',   prop: 'right',      unit: '%'   },
         { field: 'fVenueFont',    el: 'pkVenue',   prop: 'fontFamily', unit: ''    },
         { field: 'fVenueL1Size',     el: 'pkVenueL1',     prop: 'fontSize',   unit: 'cqw' },
+        { field: 'fVenueL1Weight',   el: 'pkVenueL1',     prop: 'fontWeight', unit: '' },
         { field: 'fVenueL2Size',     el: 'pkVenueL2',     prop: 'fontSize',   unit: 'cqw' },
+        { field: 'fVenueL2Weight',   el: 'pkVenueL2',     prop: 'fontWeight', unit: '' },
         { field: 'fPartnerTop',      el: 'pkPartnerArea', prop: 'top',        unit: '%'   },
         { field: 'fPartnerLeft',     el: 'pkPartnerArea', prop: 'left',       unit: '%'   },
         { field: 'fPartnerFont',     el: 'pkPartnerArea', prop: 'fontFamily', unit: ''    },
         { field: 'fPartnerNameSize', el: 'pkPartnerName', prop: 'fontSize',   unit: 'cqw' },
+        { field: 'fPartnerNameWeight', el: 'pkPartnerName', prop: 'fontWeight', unit: '' },
         { field: 'fPartnerSubSize',  el: 'pkPartnerSub',  prop: 'fontSize',   unit: 'cqw' },
+        { field: 'fPartnerSubWeight', el: 'pkPartnerSub',  prop: 'fontWeight', unit: '' },
         { field: 'fEventSubTop',      el: 'pkEventSub',       prop: 'top',        unit: '%'   },
         { field: 'fEventSubLeft',     el: 'pkEventSub',       prop: 'left',       unit: '%'   },
         { field: 'fEventSubSize',     el: 'pkEventSub',       prop: 'fontSize',   unit: 'cqw' },
+        { field: 'fEventSubWeight',   el: 'pkEventSub',       prop: 'fontWeight', unit: '' },
         { field: 'fEventSubFont',     el: 'pkEventSub',       prop: 'fontFamily', unit: ''    },
         { field: 'fPartnerLogoTop',   el: 'pkPartnerLogoWrap', prop: 'top',   unit: '%' },
         { field: 'fPartnerLogoLeft',  el: 'pkPartnerLogoWrap', prop: 'left',  unit: '%' },
@@ -716,6 +1658,10 @@ include __DIR__ . '/header.php';
         { field: 'fVenueLogoTop',     el: 'pkVenueLogoWrap',   prop: 'top',   unit: '%' },
         { field: 'fVenueLogoRight',   el: 'pkVenueLogoWrap',   prop: 'right', unit: '%' },
         { field: 'fVenueLogoWidth',   el: 'pkVenueLogoWrap',   prop: 'width', unit: '%' },
+        { field: 'fCircleWidth',      el: 'pkCircle',      prop: 'width', unit: '%' },
+        { field: 'fVenueWidth',       el: 'pkVenue',       prop: 'width', unit: '%' },
+        { field: 'fPartnerWidth',     el: 'pkPartnerArea', prop: 'width', unit: '%' },
+        { field: 'fEventSubWidth',    el: 'pkEventSub',    prop: 'width', unit: '%' },
     ];
     styleMap.forEach(function (m) {
         var f = document.getElementById(m.field);
@@ -728,7 +1674,61 @@ include __DIR__ . '/header.php';
         });
     });
 
-    /* File-Upload → DataURL Vorschau */
+    [
+        { fieldId: 'fCircleAlign', targetId: 'pkCircle' },
+        { fieldId: 'fVenueAlign', targetId: 'pkVenue' },
+        { fieldId: 'fPartnerAlign', targetId: 'pkPartnerArea' },
+        { fieldId: 'fEventSubAlign', targetId: 'pkEventSub' }
+    ].forEach(function (cfg) {
+        var f = document.getElementById(cfg.fieldId);
+        var t = document.getElementById(cfg.targetId);
+        if (!f || !t) return;
+        applyAreaAlign(t, f.value || 'center');
+        ['input', 'change'].forEach(function (evt) {
+            f.addEventListener(evt, function () {
+                applyAreaAlign(t, f.value || 'center');
+            });
+        });
+    });
+
+    [
+        { fieldId: 'fWeekdayVisible', targetId: 'pkWeekday' },
+        { fieldId: 'fDateVisible', targetId: 'pkDate' },
+        { fieldId: 'fTimeVisible', targetId: 'pkTime' },
+        { fieldId: 'fVenueL1Visible', targetId: 'pkVenueL1' },
+        { fieldId: 'fVenueL2Visible', targetId: 'pkVenueL2' },
+        { fieldId: 'fPartnerNameVisible', targetId: 'pkPartnerName' },
+        { fieldId: 'fPartnerSubVisible', targetId: 'pkPartnerSub' },
+        { fieldId: 'fEventSubVisible', targetId: 'pkEventSub' }
+    ].forEach(function (cfg) {
+        var f = document.getElementById(cfg.fieldId);
+        var t = document.getElementById(cfg.targetId);
+        if (!f || !t) return;
+        applyTextVisibility(t, f.value !== '0');
+        ['input', 'change'].forEach(function (evt) {
+            f.addEventListener(evt, function () {
+                applyTextVisibility(t, f.value !== '0');
+            });
+        });
+    });
+
+    /* Logo visibility init */
+    [
+        { fieldId: 'fPartnerLogoVisible', targetId: 'pkPartnerLogoWrap' },
+        { fieldId: 'fVenueLogoVisible',   targetId: 'pkVenueLogoWrap' }
+    ].forEach(function (cfg) {
+        var f = document.getElementById(cfg.fieldId);
+        var t = document.getElementById(cfg.targetId);
+        if (!f || !t) return;
+        applyTextVisibility(t, f.value !== '0');
+        ['input', 'change'].forEach(function (evt) {
+            f.addEventListener(evt, function () {
+                applyTextVisibility(t, f.value !== '0');
+            });
+        });
+    });
+
+    /* File-Upload → serverseitig speichern */
     function bindUpload(fileId, pathId, imgElId) {
         var fi = document.getElementById(fileId);
         var pi = document.getElementById(pathId);
@@ -737,23 +1737,49 @@ include __DIR__ . '/header.php';
         fi.addEventListener('change', function (ev) {
             var file = ev.target.files && ev.target.files[0];
             if (!file) return;
-            var r = new FileReader();
-            r.onload = function () {
-                if (pi) pi.value = r.result;
-                setImg(img, r.result);
-            };
-            r.readAsDataURL(file);
+            uploadLogoFile(file, function (storedPath) {
+                if (pi) pi.value = storedPath;
+                setImg(img, imgSrc(storedPath));
+                if (logoPopupPath && !logoPopup.hidden) {
+                    logoPopupPath.value = storedPath;
+                }
+            });
+            fi.value = '';
         });
     }
     bindUpload('fVenueLogoFile',   'fVenueLogo',   'pkVenueLogo');
     bindUpload('fPartnerLogoFile', 'fPartnerLogo', 'pkPartnerLogo');
 
-    /* Zoom slider */
+    /* Zoom slider + Shift+wheel zoom */
     var zoomSlider = document.getElementById('pkZoomSlider');
     var zoomLabel  = document.getElementById('pkZoomLabel');
     var layout     = document.querySelector('.pk-layout');
     var previewWrap = document.getElementById('pkPreviewWrap');
     var scaler     = document.getElementById('pkScaler');
+    var zoomStorageKey = 'pk-plakat-zoom';
+    var zoomMin = zoomSlider ? (parseFloat(zoomSlider.min) || 30) : 30;
+    var zoomMax = zoomSlider ? (parseFloat(zoomSlider.max) || 200) : 200;
+    var zoomStep = zoomSlider ? (parseFloat(zoomSlider.step) || 1) : 1;
+
+    function normalizeZoom(v) {
+        var n = clamp(v, zoomMin, zoomMax);
+        if (zoomStep > 0) {
+            n = Math.round(n / zoomStep) * zoomStep;
+        }
+        return clamp(n, zoomMin, zoomMax);
+    }
+
+    function setZoom(v) {
+        if (!zoomSlider) return;
+        zoomSlider.value = String(normalizeZoom(v));
+        try {
+            window.localStorage.setItem(zoomStorageKey, zoomSlider.value);
+        } catch (err) {
+            /* Ignore unavailable localStorage */
+        }
+        updateZoomLayout();
+    }
+
     function getBasePreviewWidth() {
         if (!previewWrap) return 0;
         var prevBasis = previewWrap.style.flexBasis;
@@ -769,7 +1795,7 @@ include __DIR__ . '/header.php';
     function updateZoomLayout() {
         if (!zoomSlider || !scaler) return;
 
-        var zoom = parseInt(zoomSlider.value, 10) || 100;
+        var zoom = parseFloat(zoomSlider.value) || 100;
         if (zoomLabel) zoomLabel.textContent = zoom + '%';
 
         if (!layout || !previewWrap || window.matchMedia('(max-width: 1000px)').matches) {
@@ -802,8 +1828,49 @@ include __DIR__ . '/header.php';
     }
 
     if (zoomSlider && scaler) {
-        zoomSlider.addEventListener('input', updateZoomLayout);
+        zoomSlider.addEventListener('input', function () {
+            try {
+                window.localStorage.setItem(zoomStorageKey, zoomSlider.value);
+            } catch (err) {
+                /* Ignore unavailable localStorage */
+            }
+            updateZoomLayout();
+        });
         window.addEventListener('resize', updateZoomLayout);
+
+        previewWrap.addEventListener('wheel', function (ev) {
+            if (!ev.shiftKey) return;
+            ev.preventDefault();
+
+            var currentZoom = parseFloat(zoomSlider.value) || 100;
+            var zoomFactor = Math.exp(-ev.deltaY * 0.0016);
+            var nextZoom = normalizeZoom(currentZoom * zoomFactor);
+            if (nextZoom === currentZoom) return;
+
+            var rect = previewWrap.getBoundingClientRect();
+            var pointerX = ev.clientX - rect.left;
+            var oldScrollWidth = previewWrap.scrollWidth || 1;
+            var relativeX = (previewWrap.scrollLeft + pointerX) / oldScrollWidth;
+
+            setZoom(nextZoom);
+
+            window.requestAnimationFrame(function () {
+                var newScrollWidth = previewWrap.scrollWidth || 1;
+                var newScrollLeft = relativeX * newScrollWidth - pointerX;
+                var maxScrollLeft = Math.max(0, newScrollWidth - previewWrap.clientWidth);
+                previewWrap.scrollLeft = clamp(newScrollLeft, 0, maxScrollLeft);
+            });
+        }, { passive: false });
+
+        try {
+            var savedZoom = window.localStorage.getItem(zoomStorageKey);
+            if (savedZoom !== null && savedZoom !== '') {
+                zoomSlider.value = String(normalizeZoom(parseFloat(savedZoom)));
+            }
+        } catch (err) {
+            /* Ignore unavailable localStorage */
+        }
+
         updateZoomLayout();
     }
 
