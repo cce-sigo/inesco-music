@@ -143,7 +143,7 @@ include __DIR__ . '/header.php';
             <input type="range" id="pkZoomSlider" min="30" max="200" step="10" value="100">
         </label>
         <button type="submit" class="btn" form="pkForm">Speichern</button>
-        <a class="btn" id="pkPrintLink" href="<?= e(url('plakat.php')) ?>" target="_blank">Drucken&nbsp;/ PDF</a>
+        <a class="btn" id="pkPrintLink" href="<?= e(url('admin/plakat-print.php')) ?>" target="_blank">Drucken&nbsp;/ PDF</a>
     </div>
 </div>
 
