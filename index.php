@@ -69,7 +69,7 @@ include __DIR__ . '/includes/header.php';
 <!-- BIO -->
 <section class="section section-bio" id="bio">
     <div class="container">
-        <h2 class="section-title"><?= e($content['bio']['title'] ?? 'Über INESCO') ?></h2>
+        <h2 class="section-title"><?= e(nav_label('bio', $content['bio']['title'] ?? 'Über INESCO')) ?></h2>
         <p class="lead"><?= nl2br(e($content['bio']['text'] ?? '')) ?></p>
 
         <div class="members">
@@ -94,7 +94,7 @@ include __DIR__ . '/includes/header.php';
 <!-- MUSIK -->
 <section class="section section-music" id="musik">
     <div class="container">
-        <h2 class="section-title">Hörproben</h2>
+        <h2 class="section-title"><?= e(nav_label('musik', 'Hörproben')) ?></h2>
         <?php if (empty($tracks)): ?>
             <p class="muted">Noch keine Tracks online.</p>
         <?php else: ?>
@@ -118,7 +118,7 @@ include __DIR__ . '/includes/header.php';
 <!-- VIDEOS -->
 <section class="section section-video" id="videos">
     <div class="container">
-        <h2 class="section-title">Videos</h2>
+        <h2 class="section-title"><?= e(nav_label('videos', 'Videos')) ?></h2>
         <?php if (empty($videos)): ?>
             <p class="muted">Noch keine Videos online.</p>
         <?php else: ?>
@@ -168,7 +168,7 @@ include __DIR__ . '/includes/header.php';
 <!-- IMPRESSIONEN -->
 <section class="section section-impressions" id="impressionen">
     <div class="container">
-        <h2 class="section-title">Impressionen</h2>
+        <h2 class="section-title"><?= e(nav_label('impressionen', 'Impressionen')) ?></h2>
         <?php if (empty($impressions)): ?>
             <p class="muted">Bald gibt es hier Eindrücke von unseren Live-Auftritten.</p>
         <?php else: ?>
@@ -226,7 +226,7 @@ include __DIR__ . '/includes/header.php';
 <!-- KONZERTE -->
 <section class="section section-concerts" id="konzerte">
     <div class="container">
-        <h2 class="section-title">Konzerte</h2>
+        <h2 class="section-title"><?= e(nav_label('konzerte', 'Konzerte')) ?></h2>
         <?php if (empty($concerts)): ?>
             <p class="muted">Aktuell keine Termine angekündigt – wir melden uns bald wieder.</p>
         <?php else: ?>
@@ -256,7 +256,7 @@ include __DIR__ . '/includes/header.php';
 <section class="section section-contact" id="kontakt">
     <div class="container contact-grid">
         <div>
-            <h2 class="section-title">Kontakt &amp; Buchung</h2>
+            <h2 class="section-title"><?= e(nav_label('kontakt', 'Kontakt & Buchung')) ?></h2>
             <p>Sie möchten INESCO für Ihre Veranstaltung buchen? Schreiben Sie uns – wir melden uns zeitnah zurück.</p>
             <ul class="contact-info">
                 <?php if (!empty($contact['email'])): ?>
@@ -298,7 +298,7 @@ include __DIR__ . '/includes/header.php';
 <!-- FREUNDE & SPONSOREN -->
 <section class="section section-partner" id="partner">
     <div class="container">
-        <h2 class="section-title">Freunde &amp; Sponsoren</h2>
+        <h2 class="section-title"><?= e(nav_label('partner', 'Freunde & Sponsoren')) ?></h2>
 
         <?php
         $partner_freunde   = array_values(array_filter($sponsors, fn($s) => ($s['group'] ?? '') === 'freunde'   && ($s['visible'] ?? true)));
@@ -382,7 +382,7 @@ include __DIR__ . '/includes/header.php';
 <!-- GÄSTEBUCH -->
 <section class="section section-gaestebuch" id="gaestebuch">
     <div class="container">
-        <h2 class="section-title">Gästebuch</h2>
+        <h2 class="section-title"><?= e(nav_label('gaestebuch', 'Gästebuch')) ?></h2>
 
         <?php if (empty($comments)): ?>
             <p class="muted">Noch keine Einträge – sei der Erste!</p>

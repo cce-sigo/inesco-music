@@ -244,6 +244,20 @@ function nav_is_visible(string $id): bool {
 }
 
 /**
+ * Liefert die konfigurierte Navigations-Beschriftung fuer eine Section-ID.
+ * Faellt auf den uebergebenen Default-Text zurueck.
+ */
+function nav_label(string $id, string $default = ''): string {
+    foreach (nav_items() as $it) {
+        if ($it['id'] === $id) {
+            $label = trim((string)($it['label'] ?? ''));
+            return $label !== '' ? $label : $default;
+        }
+    }
+    return $default;
+}
+
+/**
  * Prüft, ob neue Gästebuch-Einträge zunächst geprüft werden müssen.
  * Default ist aktiv, damit bestehende Installationen sicher bleiben.
  */
