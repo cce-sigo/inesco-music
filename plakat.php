@@ -2,6 +2,7 @@
 require_once __DIR__ . '/admin/auth.php';
 
 $defaults = [
+    'background_image' => 'images/Plakat-INESCO_neutral.png',
     'weekday'          => 'Freitag',
     'date'             => '10. April',
     'time'             => '19:30 Uhr',
@@ -71,6 +72,34 @@ $defaults = [
     'venue_width'    => '36',
     'partner_width'  => '28',
     'eventsub_width' => '38',
+    // Kreis-Fotos (werden in feste weisse Kreise zugeschnitten)
+    'circle_img_1'         => '',
+    'circle_img_1_visible' => '1',
+    'circle_img_1_focus_x' => '50',
+    'circle_img_1_focus_y' => '50',
+    'circle_img_1_fit'     => 'contain',
+    'circle_img_1_zoom'    => '1.12',
+    'circle_img_1_top'     => '7.6',
+    'circle_img_1_left'    => '14.1',
+    'circle_img_1_width'   => '49.3',
+    'circle_img_2'         => '',
+    'circle_img_2_visible' => '1',
+    'circle_img_2_focus_x' => '50',
+    'circle_img_2_focus_y' => '50',
+    'circle_img_2_fit'     => 'contain',
+    'circle_img_2_zoom'    => '1.12',
+    'circle_img_2_top'     => '31.3',
+    'circle_img_2_left'    => '39.7',
+    'circle_img_2_width'   => '47.4',
+    'circle_img_3'         => '',
+    'circle_img_3_visible' => '1',
+    'circle_img_3_focus_x' => '50',
+    'circle_img_3_focus_y' => '50',
+    'circle_img_3_fit'     => 'contain',
+    'circle_img_3_zoom'    => '1.12',
+    'circle_img_3_top'     => '51.8',
+    'circle_img_3_left'    => '0.4',
+    'circle_img_3_width'   => '35.0',
 ];
 
 $saved = read_json('plakat', $defaults);
@@ -98,6 +127,37 @@ $d     = array_merge($defaults, $saved);
             print-color-adjust: exact;
         }
         .pk-bg { display: block; width: 100%; height: auto; }
+
+        .pk-collage-layer {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+        .pk-circle-photo {
+            position: absolute;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 0;
+            box-sizing: border-box;
+            box-shadow: none;
+        }
+        .pk-circle-photo-mask {
+            width: 100%;
+            height: 100%;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 6px solid #fff;
+            box-sizing: border-box;
+        }
+        .pk-circle-photo-image {
+            width: 100%;
+            height: 100%;
+            display: block;
+            transform-origin: center center;
+            object-fit: contain;
+        }
 
         .pk-overlay { position: absolute; }
 
@@ -194,7 +254,33 @@ $d     = array_merge($defaults, $saved);
 </div>
 
 <div class="pk-canvas">
-    <img class="pk-bg" src="<?= e(url('images/Plakat-INESCO_neutral.png')) ?>" alt="Plakat">
+    <img class="pk-bg" src="<?= e(url($d['background_image'])) ?>" alt="Plakat">
+
+    <div class="pk-collage-layer" aria-hidden="true">
+        <?php if ($d['circle_img_1'] && $d['circle_img_1_visible'] !== '0'): ?>
+        <div class="pk-circle-photo pk-circle-photo-1" style="top:<?= e($d['circle_img_1_top']) ?>%;left:<?= e($d['circle_img_1_left']) ?>%;width:<?= e($d['circle_img_1_width']) ?>%">
+            <div class="pk-circle-photo-mask">
+                <img class="pk-circle-photo-image" src="<?= e(url($d['circle_img_1'])) ?>" alt="" style="object-fit:<?= e($d['circle_img_1_fit']) ?>;transform:translate(<?= e(50 - (float)$d['circle_img_1_focus_x']) ?>%, <?= e(50 - (float)$d['circle_img_1_focus_y']) ?>%) scale(<?= e($d['circle_img_1_zoom']) ?>);">
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($d['circle_img_2'] && $d['circle_img_2_visible'] !== '0'): ?>
+        <div class="pk-circle-photo pk-circle-photo-2" style="top:<?= e($d['circle_img_2_top']) ?>%;left:<?= e($d['circle_img_2_left']) ?>%;width:<?= e($d['circle_img_2_width']) ?>%">
+            <div class="pk-circle-photo-mask">
+                <img class="pk-circle-photo-image" src="<?= e(url($d['circle_img_2'])) ?>" alt="" style="object-fit:<?= e($d['circle_img_2_fit']) ?>;transform:translate(<?= e(50 - (float)$d['circle_img_2_focus_x']) ?>%, <?= e(50 - (float)$d['circle_img_2_focus_y']) ?>%) scale(<?= e($d['circle_img_2_zoom']) ?>);">
+            </div>
+        </div>
+        <?php endif; ?>
+
+        <?php if ($d['circle_img_3'] && $d['circle_img_3_visible'] !== '0'): ?>
+        <div class="pk-circle-photo pk-circle-photo-3" style="top:<?= e($d['circle_img_3_top']) ?>%;left:<?= e($d['circle_img_3_left']) ?>%;width:<?= e($d['circle_img_3_width']) ?>%">
+            <div class="pk-circle-photo-mask">
+                <img class="pk-circle-photo-image" src="<?= e(url($d['circle_img_3'])) ?>" alt="" style="object-fit:<?= e($d['circle_img_3_fit']) ?>;transform:translate(<?= e(50 - (float)$d['circle_img_3_focus_x']) ?>%, <?= e(50 - (float)$d['circle_img_3_focus_y']) ?>%) scale(<?= e($d['circle_img_3_zoom']) ?>);">
+            </div>
+        </div>
+        <?php endif; ?>
+    </div>
 
     <?php if ($d['partner_logo'] && $d['partner_logo_visible'] !== '0'): ?>
     <div class="pk-overlay" style="top:<?= e($d['partner_logo_top']) ?>%;left:<?= e($d['partner_logo_left']) ?>%;width:<?= e($d['partner_logo_width']) ?>%">

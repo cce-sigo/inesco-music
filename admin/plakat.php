@@ -3,6 +3,7 @@ require_once __DIR__ . '/auth.php';
 $pageTitle = 'Plakat';
 
 $defaults = [
+    'background_image' => 'images/Plakat-INESCO_neutral.png',
     'weekday'          => 'Freitag',
     'date'             => '10. April',
     'time'             => '19:30 Uhr',
@@ -72,6 +73,34 @@ $defaults = [
     'venue_width'    => '36',
     'partner_width'  => '28',
     'eventsub_width' => '38',
+    // Kreis-Fotos (werden in feste weisse Kreise zugeschnitten)
+    'circle_img_1'         => '',
+    'circle_img_1_visible' => '1',
+    'circle_img_1_focus_x' => '50',
+    'circle_img_1_focus_y' => '50',
+    'circle_img_1_fit'     => 'contain',
+    'circle_img_1_zoom'    => '1',
+    'circle_img_1_top'     => '7.6',
+    'circle_img_1_left'    => '14.1',
+    'circle_img_1_width'   => '49.3',
+    'circle_img_2'         => '',
+    'circle_img_2_visible' => '1',
+    'circle_img_2_focus_x' => '50',
+    'circle_img_2_focus_y' => '50',
+    'circle_img_2_fit'     => 'contain',
+    'circle_img_2_zoom'    => '1',
+    'circle_img_2_top'     => '31.3',
+    'circle_img_2_left'    => '39.7',
+    'circle_img_2_width'   => '47.4',
+    'circle_img_3'         => '',
+    'circle_img_3_visible' => '1',
+    'circle_img_3_focus_x' => '50',
+    'circle_img_3_focus_y' => '50',
+    'circle_img_3_fit'     => 'contain',
+    'circle_img_3_zoom'    => '1',
+    'circle_img_3_top'     => '51.8',
+    'circle_img_3_left'    => '0.4',
+    'circle_img_3_width'   => '35.0',
 ];
 
 $saved = read_json('plakat', $defaults);
@@ -121,6 +150,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $new = [];
     foreach (array_keys($defaults) as $k) {
         $new[$k] = trim((string)($_POST[$k] ?? ''));
+        if (str_ends_with($k, '_visible') && !isset($_POST[$k])) {
+            $new[$k] = '0';
+        }
     }
     if (write_json('plakat', $new)) {
         flash_set('ok', 'Plakat gespeichert.');
@@ -130,7 +162,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     redirect(url('admin/plakat.php'));
 }
 
-$imageChoices = collect_image_choices(['assets/img/uploadlogos']);
+$imageChoices = collect_image_choices(['images', 'assets/img/uploadlogos']);
 
 include __DIR__ . '/header.php';
 ?>
@@ -155,7 +187,40 @@ include __DIR__ . '/header.php';
         <!-- Plakat-Canvas -->
         <div id="pkScaler">
         <div class="pk-canvas" id="pkCanvas">
-            <img class="pk-bg" src="<?= e(url('images/Plakat-INESCO_neutral.png')) ?>" alt="Plakat Hintergrund">
+            <img class="pk-bg" id="pkBg" src="<?= e(url($data['background_image'])) ?>" alt="Plakat Hintergrund">
+
+            <div class="pk-collage-layer" aria-hidden="true">
+                <div class="pk-circle-photo pk-circle-photo-1<?= $data['circle_img_1_visible'] === '0' ? ' pk-text-hidden' : '' ?>" id="pkCirclePhotoWrap1" style="top:<?= e($data['circle_img_1_top']) ?>%;left:<?= e($data['circle_img_1_left']) ?>%;width:<?= e($data['circle_img_1_width']) ?>%">
+                    <div class="pk-circle-photo-mask" style="--focus-x:<?= e($data['circle_img_1_focus_x']) ?>%;--focus-y:<?= e($data['circle_img_1_focus_y']) ?>%">
+                        <img id="pkCirclePhoto1"
+                             class="pk-circle-photo-image"
+                             src="<?= e($data['circle_img_1'] ? url($data['circle_img_1']) : '') ?>"
+                             alt=""
+                                style="<?= $data['circle_img_1'] ? '' : 'display:none;' ?>object-fit:<?= e($data['circle_img_1_fit']) ?>;transform:translate(<?= e(50 - (float)$data['circle_img_1_focus_x']) ?>%, <?= e(50 - (float)$data['circle_img_1_focus_y']) ?>%) scale(<?= e($data['circle_img_1_zoom']) ?>);">
+                        <span class="pk-circle-focus-marker" aria-hidden="true"></span>
+                    </div>
+                </div>
+                <div class="pk-circle-photo pk-circle-photo-2<?= $data['circle_img_2_visible'] === '0' ? ' pk-text-hidden' : '' ?>" id="pkCirclePhotoWrap2" style="top:<?= e($data['circle_img_2_top']) ?>%;left:<?= e($data['circle_img_2_left']) ?>%;width:<?= e($data['circle_img_2_width']) ?>%">
+                    <div class="pk-circle-photo-mask" style="--focus-x:<?= e($data['circle_img_2_focus_x']) ?>%;--focus-y:<?= e($data['circle_img_2_focus_y']) ?>%">
+                        <img id="pkCirclePhoto2"
+                             class="pk-circle-photo-image"
+                             src="<?= e($data['circle_img_2'] ? url($data['circle_img_2']) : '') ?>"
+                             alt=""
+                            style="<?= $data['circle_img_2'] ? '' : 'display:none;' ?>object-fit:<?= e($data['circle_img_2_fit']) ?>;transform:translate(<?= e(50 - (float)$data['circle_img_2_focus_x']) ?>%, <?= e(50 - (float)$data['circle_img_2_focus_y']) ?>%) scale(<?= e($data['circle_img_2_zoom']) ?>);">
+                        <span class="pk-circle-focus-marker" aria-hidden="true"></span>
+                    </div>
+                </div>
+                <div class="pk-circle-photo pk-circle-photo-3<?= $data['circle_img_3_visible'] === '0' ? ' pk-text-hidden' : '' ?>" id="pkCirclePhotoWrap3" style="top:<?= e($data['circle_img_3_top']) ?>%;left:<?= e($data['circle_img_3_left']) ?>%;width:<?= e($data['circle_img_3_width']) ?>%">
+                    <div class="pk-circle-photo-mask" style="--focus-x:<?= e($data['circle_img_3_focus_x']) ?>%;--focus-y:<?= e($data['circle_img_3_focus_y']) ?>%">
+                        <img id="pkCirclePhoto3"
+                             class="pk-circle-photo-image"
+                             src="<?= e($data['circle_img_3'] ? url($data['circle_img_3']) : '') ?>"
+                             alt=""
+                                style="<?= $data['circle_img_3'] ? '' : 'display:none;' ?>object-fit:<?= e($data['circle_img_3_fit']) ?>;transform:translate(<?= e(50 - (float)$data['circle_img_3_focus_x']) ?>%, <?= e(50 - (float)$data['circle_img_3_focus_y']) ?>%) scale(<?= e($data['circle_img_3_zoom']) ?>);">
+                        <span class="pk-circle-focus-marker" aria-hidden="true"></span>
+                    </div>
+                </div>
+            </div>
 
             <!-- Partner-Logo (eigenständig positioniert) -->
             <div class="pk-overlay pk-logo-overlay<?= $data['partner_logo_visible'] === '0' ? ' pk-text-hidden' : '' ?>" id="pkPartnerLogoWrap"
@@ -296,6 +361,18 @@ include __DIR__ . '/header.php';
             <h2>Bearbeiten</h2>
 
             <div class="pk-editor-cards">
+
+            <!-- ── Hintergrund ── -->
+            <fieldset>
+                <legend>Hintergrund</legend>
+                <label>Hauptbild
+                    <input type="text" name="background_image" id="fBackgroundImage"
+                           value="<?= e($data['background_image']) ?>" list="pkImagePathList" placeholder="z.B. images/Plakat-INESCO_neutral.png">
+                </label>
+                <label>Hauptbild hochladen
+                    <input type="file" id="fBackgroundImageFile" accept="image/*">
+                </label>
+            </fieldset>
 
             <!-- ── Datum & Uhrzeit ── -->
             <fieldset>
@@ -507,6 +584,164 @@ include __DIR__ . '/header.php';
                 </div>
             </fieldset>
 
+            <!-- ── Kreis-Fotos ── -->
+            <fieldset>
+                <legend>Kreis-Fotos</legend>
+
+                <label>Foto 1
+                    <select name="circle_img_1" id="fCircleImg1" class="pk-image-choice-select">
+                        <option value="">-- Bitte waehlen --</option>
+                        <?php foreach ($imageChoices as $imgPath): ?>
+                        <option value="<?= e($imgPath) ?>"<?= $data['circle_img_1'] === $imgPath ? ' selected' : '' ?>><?= e($imgPath) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <label>Foto 1 hochladen
+                    <input type="file" id="fCircleImg1File" accept="image/*">
+                </label>
+                <div class="pk-field-row">
+                    <label class="pk-field-half">Foto 1 Fokus X (%)
+                        <input type="number" name="circle_img_1_focus_x" id="fCircleImg1FocusX"
+                               step="1" min="0" max="100" value="<?= e($data['circle_img_1_focus_x']) ?>">
+                    </label>
+                    <label class="pk-field-half">Foto 1 Fokus Y (%)
+                        <input type="number" name="circle_img_1_focus_y" id="fCircleImg1FocusY"
+                               step="1" min="0" max="100" value="<?= e($data['circle_img_1_focus_y']) ?>">
+                    </label>
+                </div>
+                <div class="pk-field-row">
+                    <label class="pk-field-half">Foto 1 oben (%)
+                        <input type="number" name="circle_img_1_top" id="fCircleImg1Top"
+                               step="0.1" min="0" max="100" value="<?= e($data['circle_img_1_top']) ?>">
+                    </label>
+                    <label class="pk-field-half">Foto 1 links (%)
+                        <input type="number" name="circle_img_1_left" id="fCircleImg1Left"
+                               step="0.1" min="0" max="100" value="<?= e($data['circle_img_1_left']) ?>">
+                    </label>
+                </div>
+                <label>Foto 1 Breite (%)
+                    <input type="number" name="circle_img_1_width" id="fCircleImg1Width"
+                           step="0.1" min="1" max="100" value="<?= e($data['circle_img_1_width']) ?>">
+                </label>
+                <label>Foto 1 Zoom (z.B. 1.12)
+                    <input type="number" name="circle_img_1_zoom" id="fCircleImg1Zoom"
+                           step="0.01" min="0" max="3" value="<?= e($data['circle_img_1_zoom']) ?>">
+                </label>
+                <label>Foto 1 Modus
+                    <select name="circle_img_1_fit" id="fCircleImg1Fit">
+                        <option value="cover"<?= $data['circle_img_1_fit'] === 'cover' ? ' selected' : '' ?>>Fuellend beschneiden</option>
+                        <option value="contain"<?= $data['circle_img_1_fit'] === 'contain' ? ' selected' : '' ?>>Ganzes Bild zeigen</option>
+                    </select>
+                </label>
+                <label>
+                    <input type="hidden" name="circle_img_1_visible" value="0">
+                    <input type="checkbox" name="circle_img_1_visible" id="fCircleImg1Visible" value="1"<?= $data['circle_img_1_visible'] !== '0' ? ' checked' : '' ?>>
+                    Foto 1 sichtbar
+                </label>
+
+                <label>Foto 2
+                    <select name="circle_img_2" id="fCircleImg2" class="pk-image-choice-select">
+                        <option value="">-- Bitte waehlen --</option>
+                        <?php foreach ($imageChoices as $imgPath): ?>
+                        <option value="<?= e($imgPath) ?>"<?= $data['circle_img_2'] === $imgPath ? ' selected' : '' ?>><?= e($imgPath) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <label>Foto 2 hochladen
+                    <input type="file" id="fCircleImg2File" accept="image/*">
+                </label>
+                <div class="pk-field-row">
+                    <label class="pk-field-half">Foto 2 Fokus X (%)
+                        <input type="number" name="circle_img_2_focus_x" id="fCircleImg2FocusX"
+                               step="1" min="0" max="100" value="<?= e($data['circle_img_2_focus_x']) ?>">
+                    </label>
+                    <label class="pk-field-half">Foto 2 Fokus Y (%)
+                        <input type="number" name="circle_img_2_focus_y" id="fCircleImg2FocusY"
+                               step="1" min="0" max="100" value="<?= e($data['circle_img_2_focus_y']) ?>">
+                    </label>
+                </div>
+                <div class="pk-field-row">
+                    <label class="pk-field-half">Foto 2 oben (%)
+                        <input type="number" name="circle_img_2_top" id="fCircleImg2Top"
+                               step="0.1" min="0" max="100" value="<?= e($data['circle_img_2_top']) ?>">
+                    </label>
+                    <label class="pk-field-half">Foto 2 links (%)
+                        <input type="number" name="circle_img_2_left" id="fCircleImg2Left"
+                               step="0.1" min="0" max="100" value="<?= e($data['circle_img_2_left']) ?>">
+                    </label>
+                </div>
+                <label>Foto 2 Breite (%)
+                    <input type="number" name="circle_img_2_width" id="fCircleImg2Width"
+                           step="0.1" min="1" max="100" value="<?= e($data['circle_img_2_width']) ?>">
+                </label>
+                <label>Foto 2 Zoom (z.B. 1.12)
+                    <input type="number" name="circle_img_2_zoom" id="fCircleImg2Zoom"
+                           step="0.01" min="0" max="3" value="<?= e($data['circle_img_2_zoom']) ?>">
+                </label>
+                <label>Foto 2 Modus
+                    <select name="circle_img_2_fit" id="fCircleImg2Fit">
+                        <option value="cover"<?= $data['circle_img_2_fit'] === 'cover' ? ' selected' : '' ?>>Fuellend beschneiden</option>
+                        <option value="contain"<?= $data['circle_img_2_fit'] === 'contain' ? ' selected' : '' ?>>Ganzes Bild zeigen</option>
+                    </select>
+                </label>
+                <label>
+                    <input type="hidden" name="circle_img_2_visible" value="0">
+                    <input type="checkbox" name="circle_img_2_visible" id="fCircleImg2Visible" value="1"<?= $data['circle_img_2_visible'] !== '0' ? ' checked' : '' ?>>
+                    Foto 2 sichtbar
+                </label>
+
+                <label>Foto 3
+                    <select name="circle_img_3" id="fCircleImg3" class="pk-image-choice-select">
+                        <option value="">-- Bitte waehlen --</option>
+                        <?php foreach ($imageChoices as $imgPath): ?>
+                        <option value="<?= e($imgPath) ?>"<?= $data['circle_img_3'] === $imgPath ? ' selected' : '' ?>><?= e($imgPath) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </label>
+                <label>Foto 3 hochladen
+                    <input type="file" id="fCircleImg3File" accept="image/*">
+                </label>
+                <div class="pk-field-row">
+                    <label class="pk-field-half">Foto 3 Fokus X (%)
+                        <input type="number" name="circle_img_3_focus_x" id="fCircleImg3FocusX"
+                               step="1" min="0" max="100" value="<?= e($data['circle_img_3_focus_x']) ?>">
+                    </label>
+                    <label class="pk-field-half">Foto 3 Fokus Y (%)
+                        <input type="number" name="circle_img_3_focus_y" id="fCircleImg3FocusY"
+                               step="1" min="0" max="100" value="<?= e($data['circle_img_3_focus_y']) ?>">
+                    </label>
+                </div>
+                <div class="pk-field-row">
+                    <label class="pk-field-half">Foto 3 oben (%)
+                        <input type="number" name="circle_img_3_top" id="fCircleImg3Top"
+                               step="0.1" min="0" max="100" value="<?= e($data['circle_img_3_top']) ?>">
+                    </label>
+                    <label class="pk-field-half">Foto 3 links (%)
+                        <input type="number" name="circle_img_3_left" id="fCircleImg3Left"
+                               step="0.1" min="0" max="100" value="<?= e($data['circle_img_3_left']) ?>">
+                    </label>
+                </div>
+                <label>Foto 3 Breite (%)
+                    <input type="number" name="circle_img_3_width" id="fCircleImg3Width"
+                           step="0.1" min="1" max="100" value="<?= e($data['circle_img_3_width']) ?>">
+                </label>
+                <label>Foto 3 Zoom (z.B. 1.12)
+                    <input type="number" name="circle_img_3_zoom" id="fCircleImg3Zoom"
+                           step="0.01" min="0" max="3" value="<?= e($data['circle_img_3_zoom']) ?>">
+                </label>
+                <label>Foto 3 Modus
+                    <select name="circle_img_3_fit" id="fCircleImg3Fit">
+                        <option value="cover"<?= $data['circle_img_3_fit'] === 'cover' ? ' selected' : '' ?>>Fuellend beschneiden</option>
+                        <option value="contain"<?= $data['circle_img_3_fit'] === 'contain' ? ' selected' : '' ?>>Ganzes Bild zeigen</option>
+                    </select>
+                </label>
+                <label>
+                    <input type="hidden" name="circle_img_3_visible" value="0">
+                    <input type="checkbox" name="circle_img_3_visible" id="fCircleImg3Visible" value="1"<?= $data['circle_img_3_visible'] !== '0' ? ' checked' : '' ?>>
+                    Foto 3 sichtbar
+                </label>
+            </fieldset>
+
             </div><!-- /pk-editor-cards -->
         </form>
     </aside>
@@ -672,6 +907,69 @@ include __DIR__ . '/header.php';
 
 /* Alle Overlays absolut zum Canvas */
 .pk-overlay { position: absolute; }
+
+/* Kreis-Foto-Collage (feste Kreise mit weissem Rand) */
+.pk-collage-layer {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+.pk-circle-photo {
+    position: absolute;
+    aspect-ratio: 1;
+    overflow: visible;
+    border: 0;
+    box-sizing: border-box;
+    box-shadow: none;
+    pointer-events: auto;
+}
+.pk-circle-photo-mask {
+    width: 100%;
+    height: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    overflow: hidden;
+    border: 6px solid #fff;
+    box-sizing: border-box;
+    position: relative;
+    --focus-x: 50%;
+    --focus-y: 50%;
+}
+.pk-circle-photo-image {
+    width: 100%;
+    height: 100%;
+    display: block;
+    transform-origin: center center;
+    object-fit: contain;
+}
+.pk-circle-focus-marker {
+    position: absolute;
+    left: var(--focus-x);
+    top: var(--focus-y);
+    width: 14px;
+    height: 14px;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+}
+.pk-circle-focus-marker::before,
+.pk-circle-focus-marker::after {
+    content: "";
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    background: rgba(240,200,120,.95);
+    box-shadow: 0 0 0 1px rgba(0,0,0,.35);
+}
+.pk-circle-focus-marker::before {
+    width: 14px;
+    height: 2px;
+    transform: translate(-50%, -50%);
+}
+.pk-circle-focus-marker::after {
+    width: 2px;
+    height: 14px;
+    transform: translate(-50%, -50%);
+}
 
 /* Inline text editing on poster */
 .pk-editable-text {
@@ -1001,6 +1299,7 @@ include __DIR__ . '/header.php';
     }
 
     var map = [
+        { field: 'fBackgroundImage', el: 'pkBg', attr: 'img' },
         { field: 'fWeekday',   el: 'pkWeekday',   attr: null },
         { field: 'fDate',      el: 'pkDate',       attr: null },
         { field: 'fTime',      el: 'pkTime',       attr: null },
@@ -1011,18 +1310,23 @@ include __DIR__ . '/header.php';
         { field: 'fEventSub',    el: 'pkEventSub',    attr: null },
         { field: 'fVenueLogo',   el: 'pkVenueLogo',   attr: 'img' },
         { field: 'fPartnerLogo', el: 'pkPartnerLogo', attr: 'img' },
+        { field: 'fCircleImg1',  el: 'pkCirclePhoto1', attr: 'img' },
+        { field: 'fCircleImg2',  el: 'pkCirclePhoto2', attr: 'img' },
+        { field: 'fCircleImg3',  el: 'pkCirclePhoto3', attr: 'img' },
     ];
 
     map.forEach(function (m) {
         var f = document.getElementById(m.field);
         var e = document.getElementById(m.el);
         if (!f || !e) return;
-        f.addEventListener('input', function () {
-            if (m.attr === 'img') {
-                setImg(e, imgSrc(f.value));
-            } else {
-                e.textContent = f.value;
-            }
+        ['input', 'change'].forEach(function (evt) {
+            f.addEventListener(evt, function () {
+                if (m.attr === 'img') {
+                    setImg(e, imgSrc(f.value));
+                } else {
+                    e.textContent = f.value;
+                }
+            });
         });
     });
 
@@ -1263,6 +1567,14 @@ include __DIR__ . '/header.php';
             selectOpt.textContent = normalized;
             logoPopupPath.appendChild(selectOpt);
         }
+
+        document.querySelectorAll('.pk-image-choice-select').forEach(function (selectEl) {
+            if (hasOptionValue(selectEl)) return;
+            var opt = document.createElement('option');
+            opt.value = normalized;
+            opt.textContent = normalized;
+            selectEl.appendChild(opt);
+        });
     }
 
     function uploadLogoFile(file, onDone) {
@@ -1494,6 +1806,38 @@ include __DIR__ . '/header.php';
         });
     }
 
+    function bindObjectPosition(xFieldId, yFieldId, zoomFieldId, fitFieldId, imgId) {
+        var x = document.getElementById(xFieldId);
+        var y = document.getElementById(yFieldId);
+        var zoom = document.getElementById(zoomFieldId);
+        var fit = document.getElementById(fitFieldId);
+        var img = document.getElementById(imgId);
+        var mask = img ? img.parentElement : null;
+        if (!x || !y || !zoom || !fit || !img || !mask) return;
+
+        function apply() {
+            var focusX = parseFloat(x.value);
+            var focusY = parseFloat(y.value);
+            if (Number.isNaN(focusX)) focusX = 50;
+            if (Number.isNaN(focusY)) focusY = 50;
+            var zoomValue = parseFloat(zoom.value);
+            if (Number.isNaN(zoomValue)) zoomValue = 1.12;
+            img.style.objectFit = fit.value || 'cover';
+            img.style.transform = 'translate(' + (50 - focusX) + '%, ' + (50 - focusY) + '%) scale(' + zoomValue + ')';
+            mask.style.setProperty('--focus-x', x.value + '%');
+            mask.style.setProperty('--focus-y', y.value + '%');
+        }
+
+        ['input', 'change'].forEach(function (evt) {
+            x.addEventListener(evt, apply);
+            y.addEventListener(evt, apply);
+            zoom.addEventListener(evt, apply);
+            fit.addEventListener(evt, apply);
+        });
+
+        apply();
+    }
+
     [
         ['fWeekday', 'pkWeekday'],
         ['fDate', 'pkDate'],
@@ -1582,7 +1926,10 @@ include __DIR__ . '/header.php';
         { overlayId: 'pkPartnerArea',    topFieldId: 'fPartnerTop',     leftFieldId: 'fPartnerLeft' },
         { overlayId: 'pkEventSub',       topFieldId: 'fEventSubTop',    leftFieldId: 'fEventSubLeft' },
         { overlayId: 'pkPartnerLogoWrap', topFieldId: 'fPartnerLogoTop', leftFieldId: 'fPartnerLogoLeft' },
-        { overlayId: 'pkVenueLogoWrap',  topFieldId: 'fVenueLogoTop',   rightFieldId: 'fVenueLogoRight' }
+        { overlayId: 'pkVenueLogoWrap',  topFieldId: 'fVenueLogoTop',   rightFieldId: 'fVenueLogoRight' },
+        { overlayId: 'pkCirclePhotoWrap1', topFieldId: 'fCircleImg1Top', leftFieldId: 'fCircleImg1Left' },
+        { overlayId: 'pkCirclePhotoWrap2', topFieldId: 'fCircleImg2Top', leftFieldId: 'fCircleImg2Left' },
+        { overlayId: 'pkCirclePhotoWrap3', topFieldId: 'fCircleImg3Top', leftFieldId: 'fCircleImg3Left' }
     ].forEach(bindDragOverlay);
 
     /* Resize text overlay width by dragging corner handle */
@@ -1632,7 +1979,10 @@ include __DIR__ . '/header.php';
         { overlayId: 'pkPartnerArea',     widthFieldId: 'fPartnerWidth' },
         { overlayId: 'pkEventSub',        widthFieldId: 'fEventSubWidth' },
         { overlayId: 'pkPartnerLogoWrap', widthFieldId: 'fPartnerLogoWidth' },
-        { overlayId: 'pkVenueLogoWrap',   widthFieldId: 'fVenueLogoWidth',    rightAnchored: true }
+        { overlayId: 'pkVenueLogoWrap',   widthFieldId: 'fVenueLogoWidth',    rightAnchored: true },
+        { overlayId: 'pkCirclePhotoWrap1', widthFieldId: 'fCircleImg1Width' },
+        { overlayId: 'pkCirclePhotoWrap2', widthFieldId: 'fCircleImg2Width' },
+        { overlayId: 'pkCirclePhotoWrap3', widthFieldId: 'fCircleImg3Width' }
     ].forEach(bindResizeOverlay);
 
     /* Logo overlays: double-click to open edit popup */
@@ -1681,6 +2031,15 @@ include __DIR__ . '/header.php';
         { field: 'fVenueLogoTop',     el: 'pkVenueLogoWrap',   prop: 'top',   unit: '%' },
         { field: 'fVenueLogoRight',   el: 'pkVenueLogoWrap',   prop: 'right', unit: '%' },
         { field: 'fVenueLogoWidth',   el: 'pkVenueLogoWrap',   prop: 'width', unit: '%' },
+        { field: 'fCircleImg1Top',    el: 'pkCirclePhotoWrap1', prop: 'top',   unit: '%' },
+        { field: 'fCircleImg1Left',   el: 'pkCirclePhotoWrap1', prop: 'left',  unit: '%' },
+        { field: 'fCircleImg1Width',  el: 'pkCirclePhotoWrap1', prop: 'width', unit: '%' },
+        { field: 'fCircleImg2Top',    el: 'pkCirclePhotoWrap2', prop: 'top',   unit: '%' },
+        { field: 'fCircleImg2Left',   el: 'pkCirclePhotoWrap2', prop: 'left',  unit: '%' },
+        { field: 'fCircleImg2Width',  el: 'pkCirclePhotoWrap2', prop: 'width', unit: '%' },
+        { field: 'fCircleImg3Top',    el: 'pkCirclePhotoWrap3', prop: 'top',   unit: '%' },
+        { field: 'fCircleImg3Left',   el: 'pkCirclePhotoWrap3', prop: 'left',  unit: '%' },
+        { field: 'fCircleImg3Width',  el: 'pkCirclePhotoWrap3', prop: 'width', unit: '%' },
         { field: 'fCircleWidth',      el: 'pkCircle',      prop: 'width', unit: '%' },
         { field: 'fVenueWidth',       el: 'pkVenue',       prop: 'width', unit: '%' },
         { field: 'fPartnerWidth',     el: 'pkPartnerArea', prop: 'width', unit: '%' },
@@ -1751,6 +2110,22 @@ include __DIR__ . '/header.php';
         });
     });
 
+    [
+        { fieldId: 'fCircleImg1Visible', targetId: 'pkCirclePhotoWrap1' },
+        { fieldId: 'fCircleImg2Visible', targetId: 'pkCirclePhotoWrap2' },
+        { fieldId: 'fCircleImg3Visible', targetId: 'pkCirclePhotoWrap3' }
+    ].forEach(function (cfg) {
+        var f = document.getElementById(cfg.fieldId);
+        var t = document.getElementById(cfg.targetId);
+        if (!f || !t) return;
+        applyTextVisibility(t, !!f.checked);
+        ['input', 'change'].forEach(function (evt) {
+            f.addEventListener(evt, function () {
+                applyTextVisibility(t, !!f.checked);
+            });
+        });
+    });
+
     /* File-Upload → serverseitig speichern */
     function bindUpload(fileId, pathId, imgElId) {
         var fi = document.getElementById(fileId);
@@ -1762,7 +2137,10 @@ include __DIR__ . '/header.php';
             if (!file) return;
             uploadLogoFile(file, function (storedPath) {
                 if (pi) pi.value = storedPath;
-                setImg(img, imgSrc(storedPath));
+                if (img) {
+                    img.src = imgSrc(storedPath);
+                    img.style.display = '';
+                }
                 if (logoPopupPath && !logoPopup.hidden) {
                     logoPopupPath.value = storedPath;
                 }
@@ -1772,6 +2150,14 @@ include __DIR__ . '/header.php';
     }
     bindUpload('fVenueLogoFile',   'fVenueLogo',   'pkVenueLogo');
     bindUpload('fPartnerLogoFile', 'fPartnerLogo', 'pkPartnerLogo');
+    bindUpload('fBackgroundImageFile', 'fBackgroundImage', 'pkBg');
+    bindUpload('fCircleImg1File',  'fCircleImg1',  'pkCirclePhoto1');
+    bindUpload('fCircleImg2File',  'fCircleImg2',  'pkCirclePhoto2');
+    bindUpload('fCircleImg3File',  'fCircleImg3',  'pkCirclePhoto3');
+
+    bindObjectPosition('fCircleImg1FocusX', 'fCircleImg1FocusY', 'fCircleImg1Zoom', 'fCircleImg1Fit', 'pkCirclePhoto1');
+    bindObjectPosition('fCircleImg2FocusX', 'fCircleImg2FocusY', 'fCircleImg2Zoom', 'fCircleImg2Fit', 'pkCirclePhoto2');
+    bindObjectPosition('fCircleImg3FocusX', 'fCircleImg3FocusY', 'fCircleImg3Zoom', 'fCircleImg3Fit', 'pkCirclePhoto3');
 
     /* Zoom slider + Shift+wheel zoom */
     var zoomSlider = document.getElementById('pkZoomSlider');
