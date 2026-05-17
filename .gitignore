@@ -26,6 +26,8 @@ data/impressions.json
 data/members.json
 data/tracks.json
 data/videos.json
+data/plakat.json
+data/sponsors.json
 
 # ============================================================
 # Media files – user-uploaded content stays local only
