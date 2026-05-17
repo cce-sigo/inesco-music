@@ -12,6 +12,7 @@ Inhalte werden in JSON-Dateien gespeichert (keine Datenbank nötig).
 - Kontaktformular mit serverseitiger Validierung, CSRF-Schutz, Honeypot, Rate-Limit, PHP-`mail()`
 - Geschützter Admin-Bereich (`/admin`) mit Session-Login, Passwort-Hashing
 - CRUD für: Texte, Mitglieder, Audio-Tracks, Videos (YouTube/Vimeo/Upload), Konzerte, Kontakt
+- Gästebuch mit optionaler WhatsApp-Benachrichtigung bei neuen Einträgen
 - Datei-Uploads (Bilder, Audio, Video) mit Whitelist & Größenbeschränkung
 - JSON-Dateien per `.htaccess` vor direktem Zugriff geschützt
 - SEO-Basics, OG-Tags, Caching & Kompression in `.htaccess`
@@ -54,7 +55,7 @@ inesco-music/
     ├── tracks.php
     ├── videos.php
     ├── concerts.php
-    ├── contact.php
+      ├── contact.php
     ├── header.php
     ├── footer.php
     └── style.css
@@ -75,6 +76,8 @@ inesco-music/
    - `assets/img/sigo.jpg`  – Profilbild Sigo
 7. **E-Mail:** Funktion `mail()` muss verfügbar sein. Empfänger im Admin unter „Kontakt“ einstellen.
    Für Produktion empfohlen: SMTP via PHPMailer (in `includes/mailer.php` austauschen).
+8. **WhatsApp für Gästebuch:** Optional `INESCO_WHATSAPP_API_KEY=...` in `.env` setzen.
+   Danach im Admin unter „Gästebuch“ eine Zielnummer im internationalen Format hinterlegen.
 
 ## Sicherheit
 

@@ -1,5 +1,6 @@
 <?php
 require_once __DIR__ . '/../includes/config.php';
+require_once __DIR__ . '/../includes/notifications.php';
 
 header('Content-Type: application/json; charset=UTF-8');
 
@@ -85,6 +86,8 @@ if (!write_json('comments', $comments)) {
     echo json_encode(['ok' => false, 'error' => 'Speichern fehlgeschlagen. Bitte später erneut versuchen.']);
     exit;
 }
+
+send_guestbook_whatsapp_notification($newComment, $reviewingEnabled);
 
 echo json_encode(['ok' => true, 'message' => $reviewingEnabled
     ? 'Danke! Dein Eintrag wird nach Prüfung sichtbar.'

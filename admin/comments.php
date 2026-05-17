@@ -20,6 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $content['comments'] = [];
         }
         $content['comments']['reviewing'] = !empty($_POST['reviewing']);
+        $content['comments']['whatsappNumber'] = trim((string)($_POST['whatsapp_number'] ?? ''));
         if (write_json('content', $content)) {
             flash_set('ok', !empty($_POST['reviewing'])
                 ? 'Prüfung für neue Einträge aktiviert.'
@@ -87,6 +88,15 @@ include __DIR__ . '/header.php';
         <?= $reviewingEnabled
             ? 'Neue Einträge landen zuerst unter "Ausstehend" und müssen freigegeben werden.'
             : 'Neue Einträge werden sofort öffentlich angezeigt. Bestehende ausstehende Einträge bleiben unverändert.' ?>
+    </p>
+    <label style="display:block;margin-top:1rem">
+        WhatsApp-Zielnummer
+        <input type="text" name="whatsapp_number" value="<?= e($content['comments']['whatsappNumber'] ?? '') ?>"
+               placeholder="z. B. +436641234567" style="max-width:320px">
+    </label>
+    <p class="muted" style="margin:.5rem 0 0">
+        Bei neuen Gästebuch-Einträgen wird eine WhatsApp-Nachricht an diese Nummer gesendet, wenn zusätzlich
+        <strong>INESCO_WHATSAPP_API_KEY</strong> in der <strong>.env</strong> gesetzt ist.
     </p>
     <button class="btn-primary" type="submit" style="margin-top:.75rem">Einstellung speichern</button>
 </form>

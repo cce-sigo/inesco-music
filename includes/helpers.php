@@ -270,6 +270,17 @@ function comment_review_enabled(): bool {
 }
 
 /**
+ * Liefert die Zielnummer für Gästebuch-Benachrichtigungen via WhatsApp.
+ */
+function comment_whatsapp_number(): string {
+    $content = read_json('content');
+    if (!isset($content['comments']) || !is_array($content['comments'])) {
+        return '';
+    }
+    return trim((string)($content['comments']['whatsappNumber'] ?? ''));
+}
+
+/**
  * Scans an assets sub-directory recursively and returns sorted relative paths
  * (e.g. "assets/img/impressions/foo.jpg") filtered by allowed extensions.
  */
