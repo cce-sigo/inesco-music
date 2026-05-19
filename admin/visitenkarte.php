@@ -26,8 +26,6 @@ include __DIR__ . '/header.php';
     <div class="vk-preview">
         <div class="vk-toolbar">
             <button type="button" class="btn" id="vkPrintAll">Beide Seiten als PDF downloaden</button>
-            <button type="button" class="btn btn-outline" id="vkPrintFront">Vorderseite als PDF downloaden</button>
-            <button type="button" class="btn btn-outline" id="vkPrintBack">Rückseite als PDF downloaden</button>
             <button type="button" class="btn btn-outline" id="vkJpegFront">Vorderseite als JPEG</button>
             <button type="button" class="btn btn-outline" id="vkJpegBack">Rückseite als JPEG</button>
             <button type="button" class="btn btn-outline" id="vkRefresh">QR aktualisieren</button>
@@ -569,12 +567,6 @@ include __DIR__ . '/header.php';
 
     $('vkPrintAll').addEventListener('click', function () {
         downloadPdf('both');
-    });
-    $('vkPrintFront').addEventListener('click', function () {
-        downloadPdf('front');
-    });
-    $('vkPrintBack').addEventListener('click', function () {
-        downloadPdf('back');
     });
     $('vkJpegFront').addEventListener('click', function () {
         downloadJpeg('front');
