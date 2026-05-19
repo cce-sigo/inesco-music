@@ -28,6 +28,8 @@ include __DIR__ . '/header.php';
             <button type="button" class="btn" id="vkPrintAll">Beide Seiten als PDF downloaden</button>
             <button type="button" class="btn btn-outline" id="vkPrintFront">Vorderseite als PDF downloaden</button>
             <button type="button" class="btn btn-outline" id="vkPrintBack">Rückseite als PDF downloaden</button>
+            <button type="button" class="btn btn-outline" id="vkJpegFront">Vorderseite als JPEG</button>
+            <button type="button" class="btn btn-outline" id="vkJpegBack">Rückseite als JPEG</button>
             <button type="button" class="btn btn-outline" id="vkRefresh">QR aktualisieren</button>
             <button type="button" class="btn btn-outline" id="vkReset">Zurücksetzen</button>
         </div>
@@ -61,6 +63,7 @@ include __DIR__ . '/header.php';
     <!-- ===== RECHTS: Editor ===== -->
     <aside class="vk-editor" aria-label="Visitenkarte bearbeiten">
         <h2>Bearbeiten</h2>
+        <div class="vk-editor-fields">
 
         <fieldset>
             <legend>Logo</legend>
@@ -122,27 +125,42 @@ include __DIR__ . '/header.php';
                 <input type="text" id="fBackWeb" value="<?= e($defaults['web']) ?>" maxlength="80">
             </label>
         </fieldset>
+
+        <fieldset>
+            <legend>Beschnittzugabe (JPEG)</legend>
+            <label>Weißer Rand: <output id="oBleed">3</output> mm
+                <input type="range" id="fBleed" min="0" max="10" step="0.1" value="3">
+            </label>
+            <p class="muted" style="margin:.25rem 0 0;font-size:.8rem">
+                Weißer Rand um die Karte im JPEG-Export (Beschnittzugabe für den Druck).
+            </p>
+        </fieldset>
+
+        </div><!-- .vk-editor-fields -->
     </aside>
 </div>
 
 <style>
     /* ===== Layout ===== */
-    .vk-layout   { display: grid; grid-template-columns: minmax(0,1fr) 320px; gap: 24px; align-items: start; }
+    .vk-layout   { display: grid; grid-template-columns: 1fr; gap: 24px; align-items: start; }
     .vk-preview  { min-width: 0; }
     .vk-toolbar  { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
     .vk-stage    { display: flex; flex-wrap: wrap; gap: 24px; }
 
     .vk-editor   {
-        position: sticky; top: 16px;
         background: rgba(0,0,0,.25);
         border: 1px solid rgba(212,168,90,.25);
         border-radius: 8px;
         padding: 14px 16px;
-        max-height: calc(100vh - 32px);
-        overflow: auto;
     }
-    .vk-editor h2 { margin: 0 0 .5rem; font-size: 1.1rem; }
-    .vk-editor fieldset { border: 1px solid rgba(255,255,255,.12); border-radius: 6px; margin: 0 0 12px; padding: 10px 12px; }
+    .vk-editor h2 { margin: 0 0 .75rem; font-size: 1.1rem; }
+    .vk-editor-fields {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+        gap: 12px;
+        align-items: start;
+    }
+    .vk-editor fieldset { border: 1px solid rgba(255,255,255,.12); border-radius: 6px; margin: 0; padding: 10px 12px; }
     .vk-editor legend   { padding: 0 .35rem; font-weight: 700; color: #f0c878; }
     .vk-editor label    { display: block; margin: .35rem 0; font-size: .9rem; }
     .vk-editor input[type=text], .vk-editor input[type=email],
@@ -153,11 +171,6 @@ include __DIR__ . '/header.php';
         padding: 6px 8px; font: inherit;
     }
     .vk-editor input[type=range] { width: 100%; }
-
-    @media (max-width: 980px) {
-        .vk-layout { grid-template-columns: 1fr; }
-        .vk-editor { position: static; max-height: none; }
-    }
 
     /* ===== Karte ===== */
     .vk-card {
@@ -181,8 +194,8 @@ include __DIR__ . '/header.php';
         color-adjust: exact;
     }
     .vk-card::before {
-        content:""; position:absolute; inset:1.2mm;
-        border:.3mm solid rgba(212,168,90,.45); border-radius:3mm; pointer-events:none;
+        content:""; position:absolute; inset:2mm;
+        border:.3mm solid rgba(212,168,90,.45); border-radius:2mm; pointer-events:none;
     }
     .vk-card .brand { grid-column: 1/3; grid-row: 1/2; display:flex; align-items:center; gap:3mm; }
     .vk-card .brand img {
@@ -260,6 +273,7 @@ include __DIR__ . '/header.php';
         'qrLevel'   => 'M',
         'backName'  => $defaults['name'],
         'backWeb'   => $defaults['web'],
+        'bleed'     => 3,
     ], JSON_UNESCAPED_UNICODE) ?>;
 
     var $ = function (id) { return document.getElementById(id); };
@@ -268,7 +282,8 @@ include __DIR__ . '/header.php';
         name:$('fName'), tag:$('fTag'),
         phone:$('fPhone'), email:$('fEmail'), web:$('fWeb'),
         qrText:$('fQr'), qrLevel:$('fQrLevel'),
-        backName:$('fBackName'), backWeb:$('fBackWeb')
+        backName:$('fBackName'), backWeb:$('fBackWeb'),
+        bleed:$('fBleed')
     };
 
     function load() {
@@ -286,7 +301,8 @@ include __DIR__ . '/header.php';
             name: f.name.value, tag: f.tag.value,
             phone: f.phone.value, email: f.email.value, web: f.web.value,
             qrText: f.qrText.value, qrLevel: f.qrLevel.value,
-            backName: f.backName.value, backWeb: f.backWeb.value
+            backName: f.backName.value, backWeb: f.backWeb.value,
+            bleed: parseFloat(f.bleed.value) || 0
         };
     }
     function applyToFields(s) {
@@ -295,7 +311,9 @@ include __DIR__ . '/header.php';
         f.phone.value=s.phone; f.email.value=s.email; f.web.value=s.web;
         f.qrText.value=s.qrText; f.qrLevel.value=s.qrLevel;
         f.backName.value=s.backName; f.backWeb.value=s.backWeb;
+        f.bleed.value = (s.bleed !== undefined ? s.bleed : 3);
         $('oLogoSize').textContent = s.logoSize;
+        $('oBleed').textContent = f.bleed.value;
     }
     function logoSrc(p) {
         if (!p) return BASE + 'assets/img/logo.png';
@@ -397,16 +415,83 @@ include __DIR__ . '/header.php';
         });
     }
 
+    var EXPORT_DPI = 300;
+    var CARD_W_MM = 85;
+    var CARD_H_MM = 55;
+    var CARD_W_PX_300 = Math.round(CARD_W_MM * EXPORT_DPI / 25.4);
+    var CARD_H_PX_300 = Math.round(CARD_H_MM * EXPORT_DPI / 25.4);
+
     async function captureCard(el) {
         await waitForImages(el);
         return await html2canvas(el, {
-            // 85mm at 300 DPI needs ~1004 px width; scale 4 provides headroom.
+            // Capture at a higher source resolution before scaling to exact output size.
             scale: 4,
             useCORS: true,
             allowTaint: true,
             backgroundColor: null,
             logging: false
         });
+    }
+
+    async function renderCardAt300Dpi(el, bleedMm) {
+        var source = await captureCard(el);
+        var bleedPx = Math.max(0, Math.round((bleedMm || 0) * EXPORT_DPI / 25.4));
+        var out = document.createElement('canvas');
+        out.width = CARD_W_PX_300 + bleedPx * 2;
+        out.height = CARD_H_PX_300 + bleedPx * 2;
+        var ctx = out.getContext('2d');
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, out.width, out.height);
+        ctx.drawImage(source, bleedPx, bleedPx, CARD_W_PX_300, CARD_H_PX_300);
+        return out;
+    }
+
+    function buildJpegFilename(side) {
+        var d = new Date();
+        var yyyy = d.getFullYear();
+        var mm = String(d.getMonth() + 1).padStart(2, '0');
+        var dd = String(d.getDate()).padStart(2, '0');
+        var suffix = side === 'front' ? 'Vorderseite' : 'Rueckseite';
+        return 'INESCO_Visitenkarte_' + suffix + '_' + yyyy + '-' + mm + '-' + dd + '.jpg';
+    }
+
+    async function downloadJpeg(side) {
+        if (typeof html2canvas === 'undefined') {
+            alert('html2canvas konnte nicht geladen werden. Bitte Seite neu laden.');
+            return;
+        }
+        state = readState();
+        renderAll(state);
+        save(state);
+        await nextPaint();
+
+        var el = side === 'front' ? $('vkFront') : document.querySelector('.vk-card.back');
+        if (!el) { alert('Karte konnte nicht gefunden werden.'); return; }
+
+        // Temporarily strip the CSS border so the card edge is clean for print
+        var prevBorder       = el.style.border;
+        var prevBorderRadius = el.style.borderRadius;
+        var prevBoxShadow    = el.style.boxShadow;
+        el.style.border       = 'none';
+        el.style.borderRadius = '0';
+        el.style.boxShadow    = 'none';
+        await nextPaint();
+
+        try {
+            var out = await renderCardAt300Dpi(el, state.bleed || 0);
+
+            var link = document.createElement('a');
+            link.download = buildJpegFilename(side);
+            link.href = out.toDataURL('image/jpeg', 0.95);
+            link.click();
+        } catch (e) {
+            console.error(e);
+            alert('JPEG-Download fehlgeschlagen. Bitte erneut versuchen.');
+        } finally {
+            el.style.border       = prevBorder;
+            el.style.borderRadius = prevBorderRadius;
+            el.style.boxShadow    = prevBoxShadow;
+        }
     }
 
     async function downloadPdf(side) {
@@ -430,22 +515,22 @@ include __DIR__ . '/header.php';
         try {
             var jsPDF = window.jspdf.jsPDF;
             var pdf = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
-            var cardW = 85;
-            var cardH = 55;
+            var cardW = CARD_W_MM;
+            var cardH = CARD_H_MM;
             var topY = 15;
             var singleX = 15;
             var gap = 8;
             var bothX = (210 - (cardW * 2 + gap)) / 2;
 
             if (side === 'front') {
-                var frontCanvas = await captureCard(front);
+                var frontCanvas = await renderCardAt300Dpi(front, 0);
                 pdf.addImage(frontCanvas.toDataURL('image/png'), 'PNG', singleX, topY, cardW, cardH);
             } else if (side === 'back') {
-                var backCanvas = await captureCard(back);
+                var backCanvas = await renderCardAt300Dpi(back, 0);
                 pdf.addImage(backCanvas.toDataURL('image/png'), 'PNG', singleX, topY, cardW, cardH);
             } else {
-                var frontBoth = await captureCard(front);
-                var backBoth = await captureCard(back);
+                var frontBoth = await renderCardAt300Dpi(front, 0);
+                var backBoth = await renderCardAt300Dpi(back, 0);
                 pdf.addImage(frontBoth.toDataURL('image/png'), 'PNG', bothX, topY, cardW, cardH);
                 pdf.addImage(backBoth.toDataURL('image/png'), 'PNG', bothX + cardW + gap, topY, cardW, cardH);
             }
@@ -469,6 +554,7 @@ include __DIR__ . '/header.php';
             applyToCard(state);
             renderQr(state);
             save(state);
+            if (k === 'bleed') $('oBleed').textContent = state.bleed;
         });
     });
 
@@ -489,6 +575,12 @@ include __DIR__ . '/header.php';
     });
     $('vkPrintBack').addEventListener('click', function () {
         downloadPdf('back');
+    });
+    $('vkJpegFront').addEventListener('click', function () {
+        downloadJpeg('front');
+    });
+    $('vkJpegBack').addEventListener('click', function () {
+        downloadJpeg('back');
     });
 
     // Lokales Logo-Upload → DataURL
