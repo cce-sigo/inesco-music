@@ -4,6 +4,9 @@ require_once __DIR__ . '/includes/config.php';
 $content = read_json('content');
 $contact = read_json('contact');
 
+$pageTitle = 'Impressum – INESCO';
+$pageDesc  = 'Impressum und rechtliche Angaben zu INESCO – Ines & Sigo.';
+
 include __DIR__ . '/includes/header.php';
 ?>
 

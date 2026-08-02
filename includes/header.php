@@ -1,8 +1,13 @@
 <?php
 /** @var array $content */
 /** @var array $contact */
-$siteTitle = $content['site']['title'] ?? 'INESCO';
-$siteDesc  = $content['site']['description'] ?? '';
+/** @var string|null $pageTitle Optional per-page title override */
+/** @var string|null $pageDesc  Optional per-page description override */
+// Example (set before include __DIR__ . '/includes/header.php'; on any page):
+//   $pageTitle = 'Impressum – INESCO';
+//   $pageDesc  = 'Impressum und rechtliche Angaben zu INESCO – Ines & Sigo.';
+$siteTitle = $pageTitle ?? $content['site']['title'] ?? 'INESCO';
+$siteDesc  = $pageDesc  ?? $content['site']['description'] ?? '';
 $siteKw    = $content['site']['keywords'] ?? '';
 
 // Canonical URL (strip query string, sanitise host)
@@ -34,6 +39,7 @@ $brandHref  = $isHome ? '#top' : url('');
     <meta property="og:description" content="<?= e($siteDesc) ?>">
     <meta property="og:type" content="website">
     <meta property="og:url" content="<?= e($canonicalUrl) ?>">
+    <meta property="og:site_name" content="INESCO">
     <meta property="og:image" content="<?= e(url('assets/img/band.png')) ?>">
     <meta property="og:image:width" content="1064">
     <meta property="og:image:height" content="757">
@@ -43,6 +49,12 @@ $brandHref  = $isHome ? '#top' : url('');
     <meta name="twitter:title" content="<?= e($siteTitle) ?>">
     <meta name="twitter:description" content="<?= e($siteDesc) ?>">
     <meta name="twitter:image" content="<?= e(url('assets/img/band.png')) ?>">
+
+    <meta name="author" content="INESCO – Ines & Sigo">
+    <meta name="geo.region" content="AT-2">
+    <meta name="geo.placename" content="Feldkirchen in Kärnten">
+    <meta name="geo.position" content="46.7239;14.0925">
+    <meta name="ICBM" content="46.7239, 14.0925">
 
     <link rel="icon" type="image/png" href="<?= e(url('assets/img/logo.png')) ?>">
     <?php if (!empty($heroPreload)): ?>

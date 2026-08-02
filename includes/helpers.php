@@ -72,16 +72,16 @@ function next_id(array $items): string {
 /**
  * Sortiert Konzerte nach Datum aufsteigend, vergangene optional ans Ende.
  */
-function sort_concerts(array $items, bool $upcomingFirst = true): array {
+function sort_concerts(array $items, bool $upcomingFirst = true, bool $descending = false): array {
     $today = date('Y-m-d');
-    usort($items, function ($a, $b) use ($today, $upcomingFirst) {
+    usort($items, function ($a, $b) use ($today, $upcomingFirst, $descending) {
         $da = $a['date'] ?? '';
         $db = $b['date'] ?? '';
         if ($upcomingFirst) {
             $aPast = $da < $today; $bPast = $db < $today;
             if ($aPast !== $bPast) return $aPast ? 1 : -1;
         }
-        return strcmp($da, $db);
+        return $descending ? strcmp($db, $da) : strcmp($da, $db);
     });
     return $items;
 }

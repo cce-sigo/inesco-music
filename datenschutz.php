@@ -4,6 +4,9 @@ require_once __DIR__ . '/includes/config.php';
 $content = read_json('content');
 $contact = read_json('contact');
 
+$pageTitle = 'Datenschutz – INESCO';
+$pageDesc  = 'Datenschutzerklärung von INESCO gemäß DSGVO.';
+
 include __DIR__ . '/includes/header.php';
 ?>
 
