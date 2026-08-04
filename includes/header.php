@@ -108,14 +108,30 @@ $brandHref  = $isHome ? '#top' : url('');
 
     // Add Event schemas for each concert
     $today = date('Y-m-d');
+    $_eventImage = $_proto . '://' . $_host . url('assets/img/band.png');
     foreach (isset($concerts) && is_array($concerts) ? $concerts : [] as $_c) {
         if (empty($_c['date']) || $_c['date'] < $today) continue;
-        $startDate = $_c['date'] . (isset($_c['time']) ? 'T' . $_c['time'] : '');
+        $startDate = $_c['date'] . (!empty($_c['time']) ? 'T' . $_c['time'] : '');
+
+        $_eventDesc = trim($_c['description'] ?? '');
+        if ($_eventDesc === '') {
+            $_eventDesc = trim('Live-Konzert von INESCO' . (!empty($_c['venue']) ? ' im ' . $_c['venue'] : '') . (!empty($_c['city']) ? ', ' . $_c['city'] : '') . '.');
+        }
+
+        $endDate = $_c['date'];
+        if (!empty($_c['time'])) {
+            $_endTs = strtotime($_c['date'] . ' ' . $_c['time'] . ' +3 hours');
+            if ($_endTs) $endDate = date('Y-m-d\TH:i', $_endTs);
+        }
+
         $_ldGraphItems[] = [
             '@context'             => 'https://schema.org',
             '@type'                => 'Event',
             'name'                 => trim('INESCO' . (isset($_c['description']) && $_c['description'] !== '' ? ' – ' . $_c['description'] : ' – ' . ($_c['venue'] ?? ''))),
+            'description'          => $_eventDesc,
+            'image'                => [$_eventImage],
             'startDate'            => $startDate,
+            'endDate'              => $endDate,
             'eventStatus'          => 'https://schema.org/EventScheduled',
             'eventAttendanceMode'  => 'https://schema.org/OfflineEventAttendanceMode',
             'location'             => [
@@ -128,6 +144,14 @@ $brandHref  = $isHome ? '#top' : url('');
             ],
             'performer' => ['@type' => 'MusicGroup', 'name' => 'INESCO'],
             'organizer' => ['@type' => 'MusicGroup', 'name' => 'INESCO', 'url' => $siteBaseUrl],
+            'offers'    => [
+                '@type'         => 'Offer',
+                'price'         => '0',
+                'priceCurrency' => 'EUR',
+                'availability'  => 'https://schema.org/InStock',
+                'validFrom'     => $today,
+                'url'           => $siteBaseUrl . '#konzerte',
+            ],
         ];
     }
     $_jsonEncodeFlags = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES | JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT;
